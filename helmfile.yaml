@@ -1,0 +1,217 @@
+helmDefaults:
+  timeout: 600
+  recreatePods: true
+
+repositories:
+  - name: jetstack
+    url: https://charts.jetstack.io
+
+releases:
+  - name: gcp-lb-tags
+    namespace: cluster-system
+    chart: ./charts/gcp-lb-tags
+    wait: false
+    values:
+      - fullNameOverride: gcp-lb-tags
+        credentials: {{ exec "/bin/cat" (list (requiredEnv "GOOGLE_APPLICATION_CREDENTIALS")) | b64enc }}
+        clusterUuid: {{ requiredEnv "CLUSTER_UUID" }}
+        clusterName: {{ requiredEnv "CLUSTER_NAME" }}
+        network: {{ requiredEnv "CLUSTER_NETWORK"}}
+        project: {{ requiredEnv "CLUSTER_PROJECT"}}
+        region: {{ requiredEnv "CLUSTER_REGION" }}
+
+  - name: ingress
+    namespace: cluster-system
+    chart: stable/nginx-ingress
+    values:
+      - controller:
+          kind: DaemonSet
+          publishService:
+            enabled: true
+
+  - name: external-dns
+    namespace: cluster-system
+    version: 1.7.8
+    chart: stable/external-dns
+    values:
+      - sources:
+          - service
+          - ingress
+        rbac:
+          create: "true"
+        provider: google
+        google:
+          project: {{ env "CLUSTER_PROJECT"}}
+          serviceAccountSecret: {{ requiredEnv "EXTERNAL_DNS_SECRET"}}
+        domainFilters:
+          - {{ requiredEnv "EXTERNAL_DNS_DOMAIN" }}
+        resources:
+          limits:
+            memory: 50Mi
+            cpu: 100m
+          requests:
+            memory: 50Mi
+            cpu: 10m
+
+  - name: cert-manager
+    namespace: cluster-system
+    chart: jetstack/cert-manager
+    version: v0.8.0
+    values:
+      - createCustomResource: false
+        fullnameOverride: cert-manager
+        ingressShim:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          defaultIssuerName: letsencrypt-prod
+          defaultIssuerKind: ClusterIssuer
+        webhook:
+          enabled: false
+        image:
+          tag: v0.8.0
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+
+  - name: harbor
+    namespace: harbor
+    chart: ./charts/harbor
+    values:
+      - nameOverride: harbor
+        expose:
+          type: ingress
+          tls:
+            enabled: true
+            secretName: "harbor-secret"
+            notarySecretName: "notary-secret"
+            commonName: ""
+          ingress:
+            hosts:
+              core: {{ requiredEnv "HARBOR_DNS" }}
+              notary: {{ env "HARBOR_DNS" }}
+            annotations:
+              ingress.kubernetes.io/ssl-redirect: 'true'
+              ingress.kubernetes.io/proxy-body-size: '0'
+              kubernetes.io/ingress.class: nginx
+              certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+              certmanager.k8s.io/acme-challenge-type: dns01
+              certmanager.k8s.io/acme-dns01-provider: prod-clouddns
+              kubernetes.io/tls-acme: 'true'
+        externalURL: https://{{ env "HARBOR_DNS" }}
+        persistence:
+          enabled: true
+          persistentVolumeClaim:
+            database:
+              size: 10Gi
+            redis:
+              size: 10Gi
+          imageChartStorage:
+            disableredirect: false
+            type: gcs
+            gcs:
+              bucket: cluster1-harbor
+              encodedkey: {{ exec "/bin/cat" (list (requiredEnv "GOOGLE_APPLICATION_CREDENTIALS")) | b64enc }}
+        imagePullPolicy: Always
+        logLevel: info
+        harborAdminPassword: {{ requiredEnv "HARBOR_ADMIN_PASSWORD" }}
+        secretKey: {{ requiredEnv "HARBOR_SECRET_KEY" }}
+        notary:
+          enabled: true
+          secretName: notary-certs
+        database:
+          internal:
+            password: {{ requiredEnv "HARBOR_DATABASE_PASSWORD" }}
+        uaaSecretName: uaa-ca-cert
+        userSettings:
+          self_registration: "false"
+          auth_mode: uaa_auth
+          uaa_client_id: {{ requiredEnv "HARBOR_UAA_CLIENT_ID" }}
+          uaa_client_secret: {{ requiredEnv "HARBOR_UAA_CLIENT_SECRET" }}
+          uaa_endpoint: {{ requiredEnv "UAA_URL" }}
+          uaa_verify_cert: "true"
+        core:
+          secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
+        jobservice:
+          secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
+        registry:
+          secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
+
+  - name: spinnaker
+    namespace: spinnaker
+    timeout: 600
+    version: 1.11.1
+    chart: stable/spinnaker
+    # spinnaker values are real complex, so we're pulling them in
+    # from a values template. secrets are still pulled from env.
+    values:
+      - "{{ env "ENV_DIR" }}/spinnaker/values.yaml.gotmpl"
+
+  - name: concourse
+    namespace: concourse
+    chart: stable/concourse
+    version: 6.2.2
+    values:
+      - nameOverride: concourse
+        fullnameOverride: concourse
+        concourse:
+          web:
+            auth:
+              mainTeam:
+                localUser: admin
+                oidc:
+                  user: {{ requiredEnv "CONCOURSE_OIDC_USER" }}
+              oidc:
+                enabled: true
+                displayName: "PKS Auth"
+                issuer: {{ requiredEnv "UAA_URL" }}/oauth/token #
+                useCaCert: true
+                scope: "openid,roles,uaa.user"
+                userNameKey: user_name
+            clusterName: concourse
+            externalUrl: https://{{ requiredEnv "CONCOURSE_DNS" }}
+          worker:
+            baggageclaim:
+              driver: overlay
+        worker:
+          enabled: true
+          replicas: 2
+        web:
+          service:
+            type: NodePort
+          ingress:
+            enabled: true
+            hosts: [{{ env "CONCOURSE_DNS" }}]
+            tls:
+              - secretName: concourse-tls
+                hosts:
+                  - {{ env "CONCOURSE_DNS" }}
+            annotations:
+              kubernetes.io/ingress.class: 'nginx'
+              ingress.kubernetes.io/ssl-redirect: 'true'
+              certmanager.k8s.io/cluster-issuer: 'letsencrypt-prod'
+              certmanager.k8s.io/acme-challenge-type: 'dns01'
+              certmanager.k8s.io/acme-dns01-provider: 'prod-clouddns'
+              kubernetes.io/tls-acme: 'true'
+        secrets:
+          localUsers: admin:{{ requiredEnv "CONCOURSE_ADMIN_PASSWORD" }}
+          oidcCaCert: |
+            {{ exec "/bin/cat" (list (requiredEnv "ROOT_CA_CERT")) | nindent 12 }}
+          oidcClientId: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_ID" }}
+          oidcClientSecret: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_SECRET" }}
+
+  # - name: grafana
+  #   namespace: grafana
+  #   chart: stable/grafana
+  #   version: 3.3.10
+  #   values:
+  #     - grafana/values.yaml
+
+  # - name: prometheus
+  #   namespace: prometheus
+  #   chart: stable/prometheus
+  #   version: 8.11.4
+  #   values:
+  #     - prometheus/values.yaml
