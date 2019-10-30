@@ -1,6 +1,53 @@
-google:
-  projectID: pgtm-pczarkowski
 
-externalDNS:
-  domainFilters: ["pivlab.gcp.paulczar.wtf"]
-  serviceAccountSecret: "gcp-lb-tags"
+## CI/CD
+spinnaker:
+  enabled: false
+
+concourse:
+  enabled: false
+
+## Artiact Storage
+harbor:
+  enabled: true
+
+## Metrics
+grafana:
+  enabled: true
+
+prometheus:
+  enabled: true
+
+## Logging
+
+logging:
+  enabled: true
+  elasticsearch:
+    enabled: true
+    repository:
+      url: https://helm.elastic.co
+      name: elastic
+    name: elasticsearch
+    namespace: logging
+    chart: elastic/elasticsearch
+    version: 7.4.1
+    values:
+      - values/elasticsearch/values.yaml.gotmpl
+  kibana:
+    enabled: true
+    repository:
+      url: https://helm.elastic.co
+      name: elastic
+    name: kibana
+    namespace: logging
+    chart: elastic/kibana
+    version: 7.4.1
+    values:
+      - values/kibana/values.yaml.gotmpl
+  fluentbit:
+    enabled: true
+    name: fluentbit
+    namespace: logging
+    chart: stable/fluent-bit
+    version: 2.7.3
+    values:
+      - values/fluentbit/values.yaml.gotmpl
