@@ -1,0 +1,58 @@
+nameOverride: harbor
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    secretName: "harbor-secret"
+    notarySecretName: "notary-secret"
+    commonName: ""
+  ingress:
+    hosts:
+      core: {{ requiredEnv "HARBOR_DNS" }}
+      notary: {{ env "HARBOR_DNS" }}
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: 'true'
+      ingress.kubernetes.io/proxy-body-size: '0'
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/acme-challenge-type: dns01
+      cert-manager.io/acme-dns01-provider: prod-clouddns
+      kubernetes.io/tls-acme: 'true'
+externalURL: https://{{ env "HARBOR_DNS" }}
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    database:
+      size: 10Gi
+    redis:
+      size: 10Gi
+  imageChartStorage:
+    disableredirect: false
+    type: gcs
+    gcs:
+      bucket: {{ requiredEnv "ENV_NAME" }}-harbor
+      encodedkey: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
+imagePullPolicy: Always
+logLevel: info
+harborAdminPassword: {{ requiredEnv "HARBOR_ADMIN_PASSWORD" }}
+secretKey: {{ requiredEnv "HARBOR_SECRET_KEY" }}
+notary:
+  enabled: false
+  secretName: notary-certs
+database:
+  internal:
+    password: {{ requiredEnv "HARBOR_DATABASE_PASSWORD" }}
+# uaaSecretName: uaa-ca-cert
+userSettings:
+  self_registration: "false"
+  auth_mode: uaa_auth
+  uaa_client_id: {{ requiredEnv "HARBOR_UAA_CLIENT_ID" }}
+  uaa_client_secret: {{ requiredEnv "HARBOR_UAA_CLIENT_SECRET" }}
+  uaa_endpoint: {{ requiredEnv "UAA_URL" }}
+  uaa_verify_cert: "true"
+core:
+  secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
+jobservice:
+  secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
+registry:
+  secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}

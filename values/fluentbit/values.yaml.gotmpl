@@ -1,0 +1,33 @@
+backend:
+  type: es
+  es:
+    host: logging-master.{{ .Values.logging.elasticsearch.namespace }}
+    http_user: {{ requiredEnv "ELASTICSEARCH_USERNAME" }}
+    http_passwd_secret: elasticsearch-credentials
+    http_passwd_secret_key: password
+
+image:
+  fluent_bit:
+    tag: 1.2.2-debug
+
+service:
+  logLevel: debug
+
+securityContext:
+  runAsUser: 0
+
+extraVolumes:
+  - hostPath:
+      path: /var/vcap/store
+    name: varvcapstore
+  - hostPath:
+      path: /var/vcap/data
+    name: varvcapdata
+
+extraVolumeMounts:
+  - mountPath: /var/vcap/store
+    name: varvcapstore
+    readOnly: true
+  - mountPath: /var/vcap/data
+    name: varvcapdata
+    readOnly: true

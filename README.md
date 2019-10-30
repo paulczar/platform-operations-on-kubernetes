@@ -1,12 +1,14 @@
-# CI/CD on Kubernetes Infrastructure
+# Platform Operations on Kubernetes
 
-This project demonstrates how to set up and install CI/CD infrastructure on Kubernetes. It uses Pivotal Container Service (PKS) as the Kubernetes provider with RBAC being  provided by UAA, but most of this should work without, you'll just have to find an alternative authentication method for your apps.
+This project demonstrates how to set up and Platform Operations infrastructure on Kubernetes by providing a Reference Implementation of many platform level components such as CI, CD, Metrics, Logging, Policy Enforcement and security.
+
+It uses Pivotal Container Service (PKS) as the Kubernetes provider with RBAC being provided by UAA, but most of this should work without, you'll just have to find an alternative authentication method for your apps.
 
 We take advantage of a few tools to streamline things, firstly [Helm](https://helm.sh) as all of the infrastructure tooling is available in public Helm charts (although some charts may be vendored in here for custom changes). We also use Helmfile which is a project that allows you to compose Helm Charts together.
 
 With the goal of doing a gitops style workflow for deploying this, it is expected that you'll have seperate `env` directory(s) containing the customizations for a particular environment or cluster. The example included is not fully functioning, but should be fairly simple to get working.
 
-For the most part you should just need to edit `envs/cicd/envs.sh` and fill it in with your details. This is a shell script that will export environment variables to be used by Helmfile. The reason for this is that if you have passwords/secrets you can store them outside of git and have the script extract them from wherever you keep them.
+For the most part you should just need to edit `envs/default/envs.sh` and fill it in with your details. This is a shell script that will export environment variables to be used by Helmfile. The reason for this is that if you have passwords/secrets you can store them outside of git and have the script extract them from wherever you keep them.
 
 ## Download tools
 
@@ -35,29 +37,12 @@ wait for cluster to be ready...
 ### Fill out envs.sh
 
 
-### Load env and create LB
+### Load env and create DNS
 
 ```bash
-. ../envs/cicd/envs.sh
+. ../envs/default/envs.sh
 
 ```
-
-Set up DNS for the created LB to your external hostname used above.
-
-```bash
-gcloud dns record-sets transaction start --zone pivlab
-gcloud dns record-sets transaction add "35.184.76.238" \
-      --name cicd.pivlab.gcp.paulczar.wtf. --ttl 300 \
-      --type A --zone pivlab
-gcloud dns record-sets transaction execute --zone pivlab
-```
-
-### Load up your PKS kubernetes creds
-
-```bash
-pks get-credentials cicd
-```
-
 ensure kubectl is working
 
 ```bash
@@ -99,12 +84,8 @@ Server: &version.Version{SemVer:"v2.14.0", GitCommit:"05811b84a3f93603dd6c2fcfe5
 
 ## Configuration
 
-Poke through `envs/cicd/envs.sh` it should be pretty obvious what you need to set.
+Poke through `envs/default/envs.sh` it should be pretty obvious what you need to set.
 Ideally you'll copy this directory somewhere and modify and use it outside the scope of this git repository.
-
-### Configure gcp-lb-tags
-
-Not really anything to do here, defaults should be fine, just ensure envs.sh has correct cluster details and gcp auth.
 
 ### Configure ingress
 
@@ -112,7 +93,7 @@ Not really anything to do here, defaults should be fine.
 
 ### Configure cert-manager
 
-Edit the file `../envs/cicd/cert-manager/cluster-issuer.yaml` and change the email address and project for both Issuers. The rest should be okay.
+Edit the file `../envs/default/cert-manager/cluster-issuer.yaml` and change the email address and project for both Issuers. The rest should be okay.
 
 Create a namespace for cert-manager to run in:
 
@@ -123,19 +104,19 @@ kubectl create namespace cluster-system
 Apply the CRDs for cert-manager:
 
 ```bash
-./resources/cert-manager/crds.yaml
+kubectl apply -f ./resources/cert-manager/crds.yaml
 ```
 
 Create the cluster issuer:
 
 ```bash
-kubectl ./envs/cicd/cert-manager/cluster-issuer.yaml
+kubectl apply -f $ENV_DIR/cert-manager/cluster-issuer.yaml
 ```
 
 ### Concourse
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 uaac client add ${CONCOURSE_OIDC_CLIENT_ID} --scope openid,roles,uaa.user \
   --authorized_grant_types refresh_token,password,authorization_code \
   --redirect_uri "https://${CONCOURSE_DNS}/sky/issuer/callback" \
@@ -155,7 +136,7 @@ kubectl -n harbor apply -f ./resources/harbor/notary-certs-secret.yaml
 Harbor also needs your UAA server's CA Cert. You can create a secret for it like so:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 kubectl -n harbor create secret generic \
    uaa-ca-cert --from-file=ca.crt=$ROOT_CA_CERT
 ```
@@ -163,7 +144,7 @@ kubectl -n harbor create secret generic \
 You also need to create a client in your UAA server for harbor:
 
 ```bash
-. ../envs/cicd/envs.sh
+. ../envs/default/envs.sh
 uaac client add ${HARBOR_UAA_CLIENT_ID} --scope openid \
   --authorized_grant_types client_credentials,password,refresh_token \
   --redirect_uri 'https://${HARBOR_URL}  https://${HARBOR_URL}/*' \
@@ -182,7 +163,7 @@ kubectl create namespace spinnaker
 In order for Spinnaker to trust UAA's CA CERT we need to construct a new java cert store that includes our UAA cert:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 cp /etc/ssl/certs/java/cacerts /tmp/cacerts
 echo "changeit" | keytool -importcert -alias uaa-ca \
     -keystore /tmp/cacerts -noprompt -file $ROOT_CA_CERT
@@ -193,7 +174,7 @@ kubectl -n spinnaker create secret generic \
 Create a UAA client for spinnaker:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 uaac client add "${SPINNAKER_UAA_CLIENT_ID}" \
   --scope openid,uaa.user,uaa.resource \
   --authorized_grant_types password,refresh_token,authorization_code,client_credentials \
@@ -205,7 +186,7 @@ uaac client add "${SPINNAKER_UAA_CLIENT_ID}" \
  Create a secret from the client secret we just created:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 kubectl -n spinnaker create secret generic \
   spinnaker-additional-secrets \
   --from-literal="oauth2_client_secret=${SPINNAKER_UAA_CLIENT_SECRET}"
@@ -214,7 +195,7 @@ kubectl -n spinnaker create secret generic \
 Create a secret from a google service account JSON file that has GCS access:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 kubectl -n spinnaker create secret generic gcs-creds \
   --from-file="key.json=${SPINNAKER_GCS_AUTH_FILE}"
 ```
@@ -222,7 +203,7 @@ kubectl -n spinnaker create secret generic gcs-creds \
 Create a secret for your registry auth:
 
 ```bash
-. ./envs/cicd/envs.sh
+. ./envs/default/envs.sh
 kubectl -n spinnaker create secret generic registry-secret \
     --from-literal="dockerhub=${SPINNAKER_REGISTRY_PASSWORD}"
 ```
@@ -230,5 +211,14 @@ kubectl -n spinnaker create secret generic registry-secret \
 ## Install that shizzle
 
 ```bash
-helmfile apply
+helmfile --state-values-file $ENV_DIR/values.yaml diff
 ```
+
+
+k create service externalname k8s-api --external-name 245.126.226.35.bc.googleusercontent.com
+k annotate service k8s-api external-dns.alpha.kubernetes.io/hostname=k8s.cluster2.demo.paulczar.wtf
+
+
+k create secret generic gcp-lb-tags --from-file credentials.json=../cluster-envs/google.json
+
+k create secret generic google-credentials --from-file credentials.json=../cluster-envs/google.json

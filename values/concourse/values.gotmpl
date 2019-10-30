@@ -1,0 +1,47 @@
+nameOverride: concourse
+fullnameOverride: concourse
+concourse:
+  web:
+    auth:
+      mainTeam:
+        localUser: admin
+        oidc:
+          user: {{ requiredEnv "CONCOURSE_OIDC_USER" }}
+      oidc:
+        enabled: true
+        displayName: "PKS Auth"
+        issuer: {{ requiredEnv "UAA_URL" }}/oauth/token
+        useCaCert: true
+        scope: "openid,roles,uaa.user"
+        userNameKey: user_name
+    clusterName: concourse
+    externalUrl: https://{{ requiredEnv "CONCOURSE_DNS" }}
+  worker:
+    baggageclaim:
+      driver: overlay
+worker:
+  enabled: true
+  replicas: 2
+web:
+  service:
+    type: NodePort
+  ingress:
+    enabled: true
+    hosts: [{{ env "CONCOURSE_DNS" }}]
+    tls:
+      - secretName: concourse-tls
+        hosts:
+          - {{ env "CONCOURSE_DNS" }}
+    annotations:
+      kubernetes.io/ingress.class: 'nginx'
+      ingress.kubernetes.io/ssl-redirect: 'true'
+      cert-manager.io//cluster-issuer: 'letsencrypt-prod'
+      cert-manager.io//acme-challenge-type: 'dns01'
+      cert-manager.io//acme-dns01-provider: 'prod-clouddns'
+      kubernetes.io/tls-acme: 'true'
+secrets:
+  localUsers: admin:{{ requiredEnv "CONCOURSE_ADMIN_PASSWORD" }}
+  oidcCaCert: |
+    {{ exec "/bin/cat" (list (requiredEnv "ROOT_CA_CERT")) | nindent 12 }}
+  oidcClientId: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_ID" }}
+  oidcClientSecret: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_SECRET" }}

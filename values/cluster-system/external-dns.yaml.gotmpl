@@ -1,0 +1,18 @@
+sources:
+  - service
+  - ingress
+rbac:
+  create: "true"
+provider: google
+google:
+  project: {{ env "GOOGLE_PROJECT_ID" }}
+  serviceAccountSecret: {{ requiredEnv "EXTERNAL_DNS_SECRET" }}
+domainFilters:
+  - {{ requiredEnv "EXTERNAL_DNS_DOMAIN" }}
+resources:
+  limits:
+    memory: 50Mi
+    cpu: 100m
+  requests:
+    memory: 50Mi
+    cpu: 10m

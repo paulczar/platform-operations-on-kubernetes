@@ -1,0 +1,23 @@
+manifests:
+  - name: google-credentials
+    apiVersion: v1
+    kind: Secret
+    body:
+      data:
+        credentials.json: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
+  - name: letsencrypt-prod
+    apiVersion: cert-manager.io/v1alpha2
+    kind: ClusterIssuer
+    spec:
+      acme:
+        server: https://acme-v02.api.letsencrypt.org/directory
+        email: {{ requiredEnv "CERT_MANAGER_EMAIL" }}
+        privateKeySecretRef:
+          name: letsencrypt-prod
+        solvers:
+        - dns01:
+            clouddns:
+              project: {{ requiredEnv "GOOGLE_PROJECT_ID" }}
+              serviceAccountSecretRef:
+                name: google-credentials
+                key: "credentials.json"

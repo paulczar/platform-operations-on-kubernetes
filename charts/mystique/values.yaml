@@ -1,0 +1,16 @@
+# Default values for mystique.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+manifests:
+  - name: mystique
+    apiVersion: v1
+    kind: Service
+    annotations:
+      marvel.mutant.name: mystique
+    labels:
+      xwoman: mystique
+    spec:
+      externalName: "{{ .Values.url }}"
+    body: {}
+
+url: www.marvel.com

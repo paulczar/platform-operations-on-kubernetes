@@ -1,0 +1,15 @@
+createCustomResource: false
+fullnameOverride: cert-manager
+ingressShim:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+  defaultIssuerName: letsencrypt-prod
+  defaultIssuerKind: ClusterIssuer
+webhook:
+  enabled: false
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
