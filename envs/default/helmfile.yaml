@@ -1,5 +1,0 @@
-helmfiles:
-  - path: ../../cicd-on-k8s/helmfile.yaml
-    values:
-      - values.yaml
-      - values.yaml.gotmpl

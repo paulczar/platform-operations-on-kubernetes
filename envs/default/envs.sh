@@ -10,14 +10,6 @@ export ENV_DIR="./envs/${ENV_NAME}/"
 #export HELMFILE_STATE_VALUES_FILE="$ENV_DIR/values.yaml"
 
 ## General
-# the DNS name of your PKS cluster
-export PKS_HOSTNAME=pks.hostname.com
-# the IP address of your PKS cluster
-export PKS_IP=35.226.126.245
-# the location of the root_ca_certificate (download from opsman)
-export ROOT_CA_CERT=~/Downloads/root_ca_certificate
-
-## General
 # cloud provider (currently only supports gcp)
 export CLOUD_PROVIDER=gcp
 
@@ -25,7 +17,7 @@ export CLOUD_PROVIDER=gcp
 export GOOGLE_PROJECT_ID=pgtm-pczarkowski
 # the location of a GCP auth JSON file for a service-account
 # needs perms for a bunch of stuff.
-export GOOGLE_APPLICATION_CREDENTIALS_FILE="${ENV_DIR}/key.json"
+export GOOGLE_APPLICATION_CREDENTIALS_FILE="../cluster-envs/key.json"
 export GOOGLE_APPLICATION_CREDENTIALS_SECRET=$(cat ${GOOGLE_APPLICATION_CREDENTIALS_FILE} | base64 -w0)
 
 ## cert-manager
@@ -50,6 +42,7 @@ export CONCOURSE_DNS=concourse-cicd.${EXTERNAL_DNS_DOMAIN}
 # password for concourse admin user
 export CONCOURSE_ADMIN_PASSWORD=sfregredsrfre
 # client id and secret for concourse to auth against UAA
+# not currently used
 export CONCOURSE_OIDC_CLIENT_ID=concourse-cicd
 export CONCOURSE_OIDC_CLIENT_SECRET=OyM2bx4JCDN1Q1MpgMIo-JFkwVJlq_ZF
 
@@ -65,6 +58,7 @@ export HARBOR_SECRET_KEY=not-a-secure-key
 export HARBOR_DATABASE_PASSWORD=database-password
 export HARBOR_INTERNAL_SECRET=safDhgbrtresDF23
 # UAA/OIDC client id/secret to use to auth against UAA
+# not currently used
 export HARBOR_UAA_CLIENT_ID=harbor
 export HARBOR_UAA_CLIENT_SECRET=OyM2bx4JCDN1Q1MpgMIo-JFkwVJlq_ZF
 
@@ -74,12 +68,13 @@ export HARBOR_UAA_CLIENT_SECRET=OyM2bx4JCDN1Q1MpgMIo-JFkwVJlq_ZF
 export SPINNAKER_ENABLED=false
 export SPINNAKER_DNS=spinnaker-cicd.${EXTERNAL_DNS_DOMAIN}
 export SPINNAKER_GATE_DNS=gate.${SPINNAKER_DNS}
-export SPINNAKER_UAA_CLIENT_ID=spinnaker-cicd
-export SPINNAKER_UAA_CLIENT_SECRET=this-is-a-bad-client-secret
 export SPINNAKER_GCS_PROJECT=${CLUSTER_PROJECT}
 export SPINNAKER_GCS_BUCKET=${CLUSTER_PROJECT}-spinnaker-petclinic
 export SPINNAKER_GCS_AUTH_FILE=${GOOGLE_APPLICATION_CREDENTIALS}
 export SPINNAKER_REGISTRY_PASSWORD=vBtAq5UmBvexvOQz3ZDk
+# not currently used
+export SPINNAKER_UAA_CLIENT_ID=spinnaker-cicd
+export SPINNAKER_UAA_CLIENT_SECRET=this-is-a-bad-client-secret
 
 ## Grafana
 export GRAFANA_ADMIN_PASSWORD=password

@@ -5,6 +5,7 @@ manifests:
     body:
       data:
         credentials.json: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
+{{- if .Values.certManager.enabled }}
   - name: letsencrypt-prod
     apiVersion: cert-manager.io/v1alpha2
     kind: ClusterIssuer
@@ -21,3 +22,4 @@ manifests:
               serviceAccountSecretRef:
                 name: google-credentials
                 key: "credentials.json"
+{{- end }}

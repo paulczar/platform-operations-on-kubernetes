@@ -19,28 +19,42 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helm](https://helm.sh/docs/using_helm/#quickstart-guide)
 * [helmfile](https://github.com/roboll/helmfile#installation)
 * [helmdiff](https://github.com/databus23/helm-diff#install)
+* [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
 ## Prepare environment
 
-### Create PKS Kubernetes Cluster
+### Create Kubernetes Cluster
 
-> Note: If you're not using PKS you can skip this section. You'll also want to comment out the first `release` in [Helmfile](Helmfile) which is specific for PKS on GCP.
-
-Use PKS to create cluster
-
-```bash
-pks create-cluster cicd --external-hostname cicd.pivlab.gcp.paulczar.wtf --plan small
-```
+If you don't already have a Kubernetes cluster you should use PKS or GKE to create one.
 
 wait for cluster to be ready...
 
+### Prepare Helm
+
+Download and Install [Helm 2](https://github.com/helm/helm/releases/tag/v2.15.2).
+
+Install the helm diff and tillerless plugins:
+
+```bash
+helm init --client-only
+
+helm plugin install https://github.com/databus23/helm-diff
+
+helm plugin install https://github.com/rimusz/helm-tiller
+
+helm tiller install
+```
+
 ### Fill out envs.sh
 
+If you want to customize your deployment copy the contents of `/envs/default` to another location and modify `envs.sh` and `values.yaml` accordingly.
 
 ### Load env and create DNS
 
+> Note: If you changed the location of your environment you'll need to modify this command.
+
 ```bash
-. ../envs/default/envs.sh
+. ./envs/default/envs.sh
 
 ```
 ensure kubectl is working
@@ -51,35 +65,6 @@ NAME                                      STATUS   ROLES    AGE   VERSION
 vm-5ca56981-6249-4d31-613e-7d84821b245e   Ready    <none>   46m   v1.13.5
 vm-5fb78083-d502-43b3-4e01-d664fdb147dc   Ready    <none>   42m   v1.13.5
 vm-b451253c-e485-4d99-7bb4-1cfe222bf4ac   Ready    <none>   39m   v1.13.5
-```
-
-## Install Tiller
-
-This will install Helm's Tiller securely
-
-```bash
-kubectl -n kube-system create serviceaccount tiller
-kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-kubectl -n kube-system delete service tiller-deploy
-kubectl -n kube-system patch deployment tiller-deploy --patch '
-spec:
-  template:
-    spec:
-      containers:
-        - name: tiller
-          ports: []
-          command: ["/tiller"]
-          args: ["--listen=localhost:44134"]
-'
-```
-
-check tiller is working:
-
-```bash
-$ helm version
-Client: &version.Version{SemVer:"v2.14.0", GitCommit:"05811b84a3f93603dd6c2fcfe57944dfa7ab7fd0", GitTreeState:"clean"}
-Server: &version.Version{SemVer:"v2.14.0", GitCommit:"05811b84a3f93603dd6c2fcfe57944dfa7ab7fd0", GitTreeState:"clean"}
 ```
 
 ## Configuration
@@ -93,25 +78,7 @@ Not really anything to do here, defaults should be fine.
 
 ### Configure cert-manager
 
-Edit the file `../envs/default/cert-manager/cluster-issuer.yaml` and change the email address and project for both Issuers. The rest should be okay.
-
-Create a namespace for cert-manager to run in:
-
-```bash
-kubectl create namespace cluster-system
-```
-
-Apply the CRDs for cert-manager:
-
-```bash
-kubectl apply -f ./resources/cert-manager/crds.yaml
-```
-
-Create the cluster issuer:
-
-```bash
-kubectl apply -f $ENV_DIR/cert-manager/cluster-issuer.yaml
-```
+set `certManager.enabled: true` in `values.yaml` if you want TLS certificates.
 
 ### Concourse
 

@@ -1,6 +1,6 @@
 nameOverride: harbor
 expose:
-  type: ingress
+  type: clusterIP
   tls:
     enabled: true
     secretName: "harbor-secret"
@@ -45,11 +45,11 @@ database:
 # uaaSecretName: uaa-ca-cert
 userSettings:
   self_registration: "false"
-  auth_mode: uaa_auth
-  uaa_client_id: {{ requiredEnv "HARBOR_UAA_CLIENT_ID" }}
-  uaa_client_secret: {{ requiredEnv "HARBOR_UAA_CLIENT_SECRET" }}
-  uaa_endpoint: {{ requiredEnv "UAA_URL" }}
-  uaa_verify_cert: "true"
+  # auth_mode: uaa_auth
+  # uaa_client_id: {{ requiredEnv "HARBOR_UAA_CLIENT_ID" }}
+  # uaa_client_secret: {{ requiredEnv "HARBOR_UAA_CLIENT_SECRET" }}
+  # uaa_endpoint: {{ requiredEnv "UAA_URL" }}
+  # uaa_verify_cert: "true"
 core:
   secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
 jobservice:

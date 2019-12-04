@@ -5,15 +5,16 @@ concourse:
     auth:
       mainTeam:
         localUser: admin
-        oidc:
-          user: {{ requiredEnv "CONCOURSE_OIDC_USER" }}
-      oidc:
-        enabled: true
-        displayName: "PKS Auth"
-        issuer: {{ requiredEnv "UAA_URL" }}/oauth/token
-        useCaCert: true
-        scope: "openid,roles,uaa.user"
-        userNameKey: user_name
+      ## oidc is disabled for now
+      #   oidc:
+      #     user: {{ requiredEnv "CONCOURSE_OIDC_USER" }}
+      # oidc:
+      #   enabled: true
+      #   displayName: "PKS Auth"
+      #   issuer: {{ requiredEnv "UAA_URL" }}/oauth/token
+      #   useCaCert: true
+      #   scope: "openid,roles,uaa.user"
+      #   userNameKey: user_name
     clusterName: concourse
     externalUrl: https://{{ requiredEnv "CONCOURSE_DNS" }}
   worker:
@@ -26,7 +27,7 @@ web:
   service:
     type: NodePort
   ingress:
-    enabled: true
+    enabled: false
     hosts: [{{ env "CONCOURSE_DNS" }}]
     tls:
       - secretName: concourse-tls
@@ -35,9 +36,9 @@ web:
     annotations:
       kubernetes.io/ingress.class: 'nginx'
       ingress.kubernetes.io/ssl-redirect: 'true'
-      cert-manager.io//cluster-issuer: 'letsencrypt-prod'
-      cert-manager.io//acme-challenge-type: 'dns01'
-      cert-manager.io//acme-dns01-provider: 'prod-clouddns'
+      cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+      cert-manager.io/acme-challenge-type: 'dns01'
+      cert-manager.io/acme-dns01-provider: 'prod-clouddns'
       kubernetes.io/tls-acme: 'true'
 secrets:
   localUsers: admin:{{ requiredEnv "CONCOURSE_ADMIN_PASSWORD" }}

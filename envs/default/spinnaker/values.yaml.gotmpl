@@ -55,23 +55,23 @@ halyard:
       configure_oauth.sh: |
         source /opt/halyard/additionalConfigMaps/config.src
 
-        OAUTH2_CLIENT_SECRET="$( cat "$OAUTH2_CLIENT_SECRET_FILE" )"
+        # OAUTH2_CLIENT_SECRET="$( cat "$OAUTH2_CLIENT_SECRET_FILE" )"
 
-        $HAL_COMMAND config security authn oauth2 edit \
-          --client-authentication-scheme header \
-          --client-id ${OAUTH2_CLIENT_ID} \
-          --client-secret ${OAUTH2_CLIENT_SECRET} \
-          --provider other \
-          --scope openid,uaa.user,uaa.resource \
-          --user-info-mapping-username user_name \
-          --user-info-mapping-email email \
-          --user-info-mapping-first-name given_name \
-          --user-info-mapping-last-name family_name \
-          --user-authorization-uri=${OAUTH2_URL}/oauth/authorize \
-          --access-token-uri=${OAUTH2_URL}/oauth/token \
-          --user-info-uri=${OAUTH2_URL}/userinfo
+        # $HAL_COMMAND config security authn oauth2 edit \
+        #   --client-authentication-scheme header \
+        #   --client-id ${OAUTH2_CLIENT_ID} \
+        #   --client-secret ${OAUTH2_CLIENT_SECRET} \
+        #   --provider other \
+        #   --scope openid,uaa.user,uaa.resource \
+        #   --user-info-mapping-username user_name \
+        #   --user-info-mapping-email email \
+        #   --user-info-mapping-first-name given_name \
+        #   --user-info-mapping-last-name family_name \
+        #   --user-authorization-uri=${OAUTH2_URL}/oauth/authorize \
+        #   --access-token-uri=${OAUTH2_URL}/oauth/token \
+        #   --user-info-uri=${OAUTH2_URL}/userinfo
 
-        $HAL_COMMAND config security authn oauth2 enable
+        # $HAL_COMMAND config security authn oauth2 enable
 
         $HAL_COMMAND config security ui edit --override-base-url "$DECK_URL"
         $HAL_COMMAND config security api edit --override-base-url "$GATE_URL"
@@ -95,10 +95,10 @@ halyard:
     create: true
     data:
       config.src: |-
-        OAUTH2_CLIENT_ID={{ requiredEnv "SPINNAKER_UAA_CLIENT_ID" }}
-        OAUTH2_CLIENT_SECRET_FILE=/opt/halyard/additionalSecrets/oauth2_client_secret
-        GITHUB_TOKEN_FILE=/opt/halyard/additionalSecrets/github-token
-        OAUTH2_URL={{ env "UAA_URL"}}
+        # OAUTH2_CLIENT_ID={{ requiredEnv "SPINNAKER_UAA_CLIENT_ID" }}
+        # OAUTH2_CLIENT_SECRET_FILE=/opt/halyard/additionalSecrets/oauth2_client_secret
+        # GITHUB_TOKEN_FILE=/opt/halyard/additionalSecrets/github-token
+        # OAUTH2_URL={{ env "UAA_URL"}}
         GATE_URL=https://{{ requiredEnv "SPINNAKER_GATE_DNS" }}
         DECK_URL=https://{{ requiredEnv "SPINNAKER_DNS" }}
 

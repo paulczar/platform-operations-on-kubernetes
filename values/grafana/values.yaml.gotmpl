@@ -9,7 +9,7 @@ datasources:
    datasources:
    - name: prometheus
      type: prometheus
-     url: http://prometheus-server.prometheus
+     url: http://prometheus-server.{{ .Values.prometheus.namespace }}
      access: proxy
      isDefault: true
 

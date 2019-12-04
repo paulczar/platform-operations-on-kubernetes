@@ -1,124 +1,30 @@
 helmDefaults:
   timeout: 600
   recreatePods: false
+  tillerless: true
 
 repositories:
-  - name: jetstack
-    url: https://charts.jetstack.io
-{{- if .Values.harbor.enabled }}
-  - name: harbor
-    url: https://helm.goharbor.io
-{{- end }}
-{{- if .Values.logging.enabled }}
-{{- if or (.Values.logging.elasticsearch.enabled) (.Values.logging.kibana.enabled) }}
-  - name: {{ .Values.logging.elasticsearch.repository.name }}
-    url: {{ .Values.logging.elasticsearch.repository.url }}
+{{- range .Values }}
+{{- if and (.enabled) (hasKey . "repository") }}
+  - name: {{ .repository.name }}
+    url: {{ .repository.url }}
 {{- end }}
 {{- end }}
 
+
 releases:
-## Cluster Operations
+  ## A special case where we want to load
+{{- if or (.Values.certManager.enabled) (.Values.externalDNS.enabled) }}
   ## Mystique is a chart embedded in this repo that can be used to create
-  ## General kubernetes resources such as secrets from files as shown here
+  ## general kubernetes resources such as secrets from files as shown here
   - name: cluster-system-extras
     namespace: cluster-system
     chart: ./charts/mystique
     values:
       - values/cluster-system/extras.yaml.gotmpl
-
-  - name: ingress
-    namespace: cluster-system
-    chart: stable/nginx-ingress
-    version: 1.6.17
-    values:
-      - values/cluster-system/ingress.yaml.gotmpl
-
-  - name: external-dns
-    namespace: cluster-system
-    version: 2.6.4
-    chart: stable/external-dns
-    values:
-      - values/cluster-system/external-dns.yaml.gotmpl
-
-  - name: cert-manager
-    namespace: cluster-system
-    chart: jetstack/cert-manager
-    version: v0.11.0
-    values:
-      - values/cluster-system/cert-manager.yaml.gotmpl
-
-## Artifact Storage
-{{- if default false .Values.harbor.enabled }}
-  - name: harbor
-    namespace: harbor
-    chart: harbor/harbor
-    version: 1.2.0
-    values:
-      - values/harbor/values.yaml.gotmpl
 {{- end }}
 
-## Continuous Delivery
-{{- if default false .Values.spinnaker.enabled }}
-  - name: spinnaker
-    namespace: spinnaker
-    timeout: 600
-    version: 1.11.1
-    chart: stable/spinnaker
-    values:
-      - values/spinnaker/values.yaml.gotmpl
-{{- end }}
-
-## Continuous Integration
-{{ if default false .Values.concourse.enabled }}
-  - name: concourse
-    namespace: concourse
-    chart: stable/concourse
-    version: 6.2.2
-    values:
-      - values/concourse/values.yaml.gotmpl
-{{- end }}
-
-## Metrics
-{{- if .Values.grafana.enabled }}
-  - name: grafana
-    namespace: grafana
-    chart: stable/grafana
-    version: 3.3.10
-    values:
-      - values/grafana/values.yaml.gotmpl
-{{- end }}
-
-{{- if .Values.prometheus.enabled }}
-  - name: prometheus
-    namespace: prometheus
-    chart: stable/prometheus
-    version: 8.11.4
-    values:
-      - values/prometheus/values.yaml.gotmpl
-{{- end }}
-
-## Logging Infrastructure
-{{- if .Values.logging.enabled }}
-## Elasticsearch
-{{ with .Values.logging.elasticsearch }}
-{{- if .enabled }}
-  # Generate Elasticsearch credentials secret
-  - name: elasticsearch-credentials
-    namespace: {{ .namespace }}
-    chart: ./charts/mystique
-    values:
-      - values/elasticsearch/credentials.yaml.gotmpl
-
-  - name: {{ .name }}
-    namespace: {{ .namespace }}
-    chart: {{ .chart }}
-    version: "{{ .version }}"
-    values:
-      {{ .values | toYaml | indent 6 }}
-{{- end }}
-{{- end }}
-## Fluentbit
-{{ with .Values.logging.fluentbit }}
+{{- range .Values }}
 {{- if .enabled }}
   - name: {{ .name }}
     namespace: {{ .namespace }}
@@ -126,17 +32,5 @@ releases:
     version: "{{ .version }}"
     values:
       {{ .values | toYaml | indent 6 }}
-{{- end }}
-{{- end }}
-## Kibana
-{{ with .Values.logging.kibana }}
-{{- if .enabled }}
-  - name: {{ .name }}
-    namespace: {{ .namespace }}
-    chart: {{ .chart }}
-    version: "{{ .version }}"
-    values:
-      {{ .values | toYaml | indent 6 }}
-{{- end }}
 {{- end }}
 {{- end }}
