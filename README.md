@@ -175,17 +175,8 @@ kubectl -n spinnaker create secret generic registry-secret \
     --from-literal="dockerhub=${SPINNAKER_REGISTRY_PASSWORD}"
 ```
 
-## Install that shizzle
+## Install using helmfile
 
 ```bash
 helmfile --state-values-file $ENV_DIR/values.yaml diff
 ```
-
-
-k create service externalname k8s-api --external-name 245.126.226.35.bc.googleusercontent.com
-k annotate service k8s-api external-dns.alpha.kubernetes.io/hostname=k8s.cluster2.demo.paulczar.wtf
-
-
-k create secret generic gcp-lb-tags --from-file credentials.json=../cluster-envs/google.json
-
-k create secret generic google-credentials --from-file credentials.json=../cluster-envs/google.json
