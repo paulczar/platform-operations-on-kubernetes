@@ -1,0 +1,22 @@
+nameOverride: minio
+fullnameOverride: minio
+
+persistence:
+  size: 20Gi
+
+accessKey:
+  password: {{ requiredEnv "MINIO_ACCESS_KEY" }}
+
+secretKey:
+  password: {{ requiredEnv "MINIO_SECRET_KEY" }}
+
+disableWebUI: false
+
+mode: standalone
+
+defaultBuckets: harbor,spinnaker
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/minio/prometheus/metrics"
+  prometheus.io/port: "9000"

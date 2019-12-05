@@ -6,7 +6,7 @@ helmDefaults:
 environments:
   default:
     values:
-    - ./values.yaml.gotmpl
+    - ./envs/default/values.yaml.gotmpl
 
 repositories:
 {{- range .Values }}
@@ -35,6 +35,14 @@ releases:
     chart: ./charts/mystique
     values:
       - values/elasticsearch/credentials.yaml.gotmpl
+{{- end }}
+
+{{- if .Values.harbor.enabled }}
+  - name: harbor-certs
+    namespace: {{ .Values.harbor.namespace }}
+    chart: ./charts/mystique
+    values:
+      - values/harbor/generated-certs.yaml
 {{- end }}
 
 {{- range .Values }}

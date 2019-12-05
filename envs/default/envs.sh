@@ -84,3 +84,8 @@ export GRAFANA_ADMIN_PASSWORD=password
 ## Elasticsearch
 export ELASTICSEARCH_USERNAME=elastic
 export ELASTICSEARCH_PASSWORD=
+
+## Minio
+
+export MINIO_ACCESS_KEY=minio-access-key
+export MINIO_SECRET_KEY=minio-secret-key

@@ -114,4 +114,43 @@ curl -XPOST -H "Content-Type: application/json" -H "kbn-xsrf: true" localhost:56
 
 Point your web browser at `http://localhost:5601/app/kibana#/discover`
 
-![grafana dashboard](docs/default/kibana.png)
+![kibana dashboard](docs/default/kibana.png)
+
+##### Harbor
+
+> Note: You should add an `/etc/hosts` record for `127.0.0.1 harbor`
+
+Forward a port for harbor
+
+```console
+kubectl -n harbor port-forward svc/harbor 8443:443
+```
+
+Save harbor's CA cert to your local docker config:
+
+```console
+sudo su -
+mkdir /etc/docker/certs.d/harbor
+curl -k https://harbor:8443/api/systeminfo/getcert > /etc/docker/certs.d/harbor/ca.cert
+```
+
+Log into registry and push an image:
+
+```console
+$ docker login https://harbor:8443
+Username: admin
+Password: ******
+Login Succeeded
+```
+
+```console
+docker pull alpine:latest
+docker tag alpine:latest harbor:8443/library/alpine:latest
+docker push harbor:8443/library/alpine:latest
+```
+
+Browse to [http://harbor:8443](http://harbor:8443) in your web browser and login using `admin` and `change-me-please` (although you should have changed that password in envs.sh).
+
+You should be able to see your recently pushed alpine image at [https://harbor:8443/harbor/projects/1/repositories](https://harbor:8443/harbor/projects/1/repositories).
+
+![harbor](docs/default/harbor.png)
