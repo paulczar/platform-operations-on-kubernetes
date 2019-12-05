@@ -83,4 +83,4 @@ export GRAFANA_ADMIN_PASSWORD=password
 
 ## Elasticsearch
 export ELASTICSEARCH_USERNAME=elastic
-export ELASTICSEARCH_PASSWORD=flerktj34rt3
+export ELASTICSEARCH_PASSWORD=

@@ -1,10 +1,12 @@
 backend:
   type: es
   es:
-    host: logging-master.{{ .Values.elasticsearch.namespace }}
+    host: elasticsearch-master.{{ .Values.elasticsearch.namespace }}
+    {{- if env "ELASTICSEARCH_PASSWORD" }}
     http_user: {{ requiredEnv "ELASTICSEARCH_USERNAME" }}
     http_passwd_secret: elasticsearch-credentials
     http_passwd_secret_key: password
+    {{- end }}
 
 image:
   fluent_bit:

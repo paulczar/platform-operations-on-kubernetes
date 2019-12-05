@@ -1,7 +1,12 @@
 helmDefaults:
   timeout: 600
   recreatePods: false
-  tillerless: true
+  tillerless: false
+
+environments:
+  default:
+    values:
+    - ./values.yaml.gotmpl
 
 repositories:
 {{- range .Values }}
@@ -22,6 +27,14 @@ releases:
     chart: ./charts/mystique
     values:
       - values/cluster-system/extras.yaml.gotmpl
+{{- end }}
+
+{{- if and (.Values.elasticsearch.enabled) (env "ELASTICSEARCH_PASSWORD") }}
+  - name: elasticsearch-credentials
+    namespace: {{ .Values.elasticsearch.namespace }}
+    chart: ./charts/mystique
+    values:
+      - values/elasticsearch/credentials.yaml.gotmpl
 {{- end }}
 
 {{- range .Values }}

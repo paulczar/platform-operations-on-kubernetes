@@ -21,15 +21,36 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helmdiff](https://github.com/databus23/helm-diff#install)
 * [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
-## Prepare environment
+## Example Deployments
 
-### Create Kubernetes Cluster
+### default
+
+The default example installs components with their default authentication methods, because of this we do not expose services via `NodePort` or `LoadBalancer` and instead rely on the user running `kubectl port-forward`.
+
+The following components are installed in the default environment:
+
+* Grafana
+* Prometheus
+* EFK (Elasticsearch, Fluentd, Kibana)
+
+
+#### Create Kubernetes Cluster
 
 If you don't already have a Kubernetes cluster you should use PKS or GKE to create one.
 
-wait for cluster to be ready...
+Wait for cluster to be ready...
 
-### Prepare Helm
+Ensure kubectl is working
+
+```bash
+$ kubectl get nodes
+NAME                                      STATUS   ROLES    AGE   VERSION
+vm-5ca56981-6249-4d31-613e-7d84821b245e   Ready    <none>   46m   v1.13.5
+vm-5fb78083-d502-43b3-4e01-d664fdb147dc   Ready    <none>   42m   v1.13.5
+vm-b451253c-e485-4d99-7bb4-1cfe222bf4ac   Ready    <none>   39m   v1.13.5
+```
+
+#### Prepare Helm
 
 Download and Install [Helm 2](https://github.com/helm/helm/releases/tag/v2.15.2).
 
@@ -45,11 +66,12 @@ helm plugin install https://github.com/rimusz/helm-tiller
 helm tiller install
 ```
 
-### Fill out envs.sh
+
+#### Fill out envs.sh
 
 If you want to customize your deployment copy the contents of `/envs/default` to another location and modify `envs.sh` and `values.yaml` accordingly.
 
-### Load env and create DNS
+#### Load environment
 
 > Note: If you changed the location of your environment you'll need to modify this command.
 
@@ -57,126 +79,39 @@ If you want to customize your deployment copy the contents of `/envs/default` to
 . ./envs/default/envs.sh
 
 ```
-ensure kubectl is working
 
-```bash
-$ kubectl get nodes
-NAME                                      STATUS   ROLES    AGE   VERSION
-vm-5ca56981-6249-4d31-613e-7d84821b245e   Ready    <none>   46m   v1.13.5
-vm-5fb78083-d502-43b3-4e01-d664fdb147dc   Ready    <none>   42m   v1.13.5
-vm-b451253c-e485-4d99-7bb4-1cfe222bf4ac   Ready    <none>   39m   v1.13.5
-```
-
-## Configuration
-
-Poke through `envs/default/envs.sh` it should be pretty obvious what you need to set.
-Ideally you'll copy this directory somewhere and modify and use it outside the scope of this git repository.
-
-### Configure ingress
-
-Not really anything to do here, defaults should be fine.
-
-### Configure cert-manager
-
-set `certManager.enabled: true` in `values.yaml` if you want TLS certificates.
-
-### Concourse
-
-```bash
-. ./envs/default/envs.sh
-uaac client add ${CONCOURSE_OIDC_CLIENT_ID} --scope openid,roles,uaa.user \
-  --authorized_grant_types refresh_token,password,authorization_code \
-  --redirect_uri "https://${CONCOURSE_DNS}/sky/issuer/callback" \
-  --authorities clients.read,clients.secret,uaa.resource,scim.write,openid,scim.read \
-  --secret "${CONCOURSE_OIDC_CLIENT_SECRET}"
-```
-
-### Harbor
-
-Harbor will autogenerate certificates for notary, but it will regenerate them every time helm runs, which is painful. You can should create your own secret based on it, but we've provided a default to get you going:
-
-```bash
-kubectl create namespace harbor
-kubectl -n harbor apply -f ./resources/harbor/notary-certs-secret.yaml
-```
-
-Harbor also needs your UAA server's CA Cert. You can create a secret for it like so:
-
-```bash
-. ./envs/default/envs.sh
-kubectl -n harbor create secret generic \
-   uaa-ca-cert --from-file=ca.crt=$ROOT_CA_CERT
-```
-
-You also need to create a client in your UAA server for harbor:
-
-```bash
-. ../envs/default/envs.sh
-uaac client add ${HARBOR_UAA_CLIENT_ID} --scope openid \
-  --authorized_grant_types client_credentials,password,refresh_token \
-  --redirect_uri 'https://${HARBOR_URL}  https://${HARBOR_URL}/*' \
-  --secret "${HARBOR_UAA_CLIENT_SECRET}" \
-  --authorities clients.read,clients.secret,uaa.resource,scim.write,openid,scim.read
-```
-
-### Spinnaker
-
-Create a namespace for spinnaker:
-
-```bash
-kubectl create namespace spinnaker
-```
-
-In order for Spinnaker to trust UAA's CA CERT we need to construct a new java cert store that includes our UAA cert:
-
-```bash
-. ./envs/default/envs.sh
-cp /etc/ssl/certs/java/cacerts /tmp/cacerts
-echo "changeit" | keytool -importcert -alias uaa-ca \
-    -keystore /tmp/cacerts -noprompt -file $ROOT_CA_CERT
-kubectl -n spinnaker create secret generic \
-    java-ca-certs --from-file /tmp/cacerts
-```
-
-Create a UAA client for spinnaker:
-
-```bash
-. ./envs/default/envs.sh
-uaac client add "${SPINNAKER_UAA_CLIENT_ID}" \
-  --scope openid,uaa.user,uaa.resource \
-  --authorized_grant_types password,refresh_token,authorization_code,client_credentials \
-  --redirect_uri "https://${SPINNAKER_GATE_DNS}/login" \
-  --secret "${SPINNAKER_UAA_CLIENT_SECRET}" \
-  --authorities uaa.resource
-```
-
- Create a secret from the client secret we just created:
-
-```bash
-. ./envs/default/envs.sh
-kubectl -n spinnaker create secret generic \
-  spinnaker-additional-secrets \
-  --from-literal="oauth2_client_secret=${SPINNAKER_UAA_CLIENT_SECRET}"
-```
-
-Create a secret from a google service account JSON file that has GCS access:
-
-```bash
-. ./envs/default/envs.sh
-kubectl -n spinnaker create secret generic gcs-creds \
-  --from-file="key.json=${SPINNAKER_GCS_AUTH_FILE}"
-```
-
-Create a secret for your registry auth:
-
-```bash
-. ./envs/default/envs.sh
-kubectl -n spinnaker create secret generic registry-secret \
-    --from-literal="dockerhub=${SPINNAKER_REGISTRY_PASSWORD}"
-```
-
-## Install using helmfile
+#### Install using helmfile
 
 ```bash
 helmfile --state-values-file $ENV_DIR/values.yaml diff
 ```
+
+#### Check services
+
+##### Grafana
+
+```bash
+kubectl -n metrics port-forward svc/grafana 3000
+```
+
+Point your web browser at `http://localhost:3000` and then browse to the `cluster-monitoring-for-kubernetes` dashboard.
+
+![grafana dashboard](docs/default/grafana.png)
+
+##### Kibana
+
+> Note: `sudo sysctl -w vm.max_map_count=262144` must be set on your worker nodes for elasticsearch to start correctly. Or you can enable privileged mode which is not recommended.
+
+```bash
+kubectl -n logging port-forward svc/kibana-kibana 5601
+```
+
+Use `curl` to set a default index pattern
+
+```
+curl -XPOST -H "Content-Type: application/json" -H "kbn-xsrf: true" localhost:5601/api/kibana/settings/defaultIndex -d '{"value": "kubernetes_cluster-*"}'
+```
+
+Point your web browser at `http://localhost:5601/app/kibana#/discover`
+
+![grafana dashboard](docs/default/kibana.png)

@@ -73,17 +73,17 @@ grafana:
     - values/grafana/values.yaml.gotmpl
 
 prometheus:
-  enabled: false
+  enabled: true
   name: prometheus
   namespace: metrics
   chart: stable/prometheus
   version: 8.11.4
   values:
     - values/prometheus/values.yaml.gotmpl
-## Logging
 
+## Logging
 elasticsearch:
-  enabled: false
+  enabled: true
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -93,8 +93,9 @@ elasticsearch:
   version: 7.4.1
   values:
     - values/elasticsearch/values.yaml.gotmpl
+
 kibana:
-  enabled: false
+  enabled: true
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -105,7 +106,7 @@ kibana:
   values:
     - values/kibana/values.yaml.gotmpl
 fluentbit:
-  enabled: false
+  enabled: true
   name: fluentbit
   namespace: logging
   chart: stable/fluent-bit

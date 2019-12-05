@@ -1,10 +1,11 @@
-elasticsearchHosts: http://logging-master.{{ .Values.elasticsearch.namespace }}:9200
+elasticsearchHosts: http://elasticsearch-master.{{ .Values.elasticsearch.namespace }}:9200
 
 replicas: 1
 
 protocol: http
 
 extraEnvs:
+{{- if env "ELASTICSEARCH_PASSWORD" }}
   - name: ELASTICSEARCH_USERNAME
     value: {{ requiredEnv "ELASTICSEARCH_USERNAME" }}
   - name: ELASTICSEARCH_PASSWORD
@@ -12,3 +13,4 @@ extraEnvs:
       secretKeyRef:
         name: elasticsearch-credentials
         key: password
+{{- end }}
