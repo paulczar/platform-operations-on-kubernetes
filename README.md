@@ -154,3 +154,16 @@ Browse to [http://harbor:8443](http://harbor:8443) in your web browser and login
 You should be able to see your recently pushed alpine image at [https://harbor:8443/harbor/projects/1/repositories](https://harbor:8443/harbor/projects/1/repositories).
 
 ![harbor](docs/default/harbor.png)
+
+
+##### Concourse
+
+Forward a port for concourse
+
+```console
+kubectl -n concourse port-forward svc/concourse-web 8080
+```
+
+Browse to [http://localhost:8080](http://localhost:8080) in your web browser and login using `admin` and `change-me-please` (although you should have changed that password in envs.sh).
+
+![Concourse](docs/default/concourse.png)

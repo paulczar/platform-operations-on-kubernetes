@@ -5,18 +5,8 @@ concourse:
     auth:
       mainTeam:
         localUser: admin
-      ## oidc is disabled for now
-      #   oidc:
-      #     user: {{ requiredEnv "CONCOURSE_OIDC_USER" }}
-      # oidc:
-      #   enabled: true
-      #   displayName: "PKS Auth"
-      #   issuer: {{ requiredEnv "UAA_URL" }}/oauth/token
-      #   useCaCert: true
-      #   scope: "openid,roles,uaa.user"
-      #   userNameKey: user_name
     clusterName: concourse
-    externalUrl: https://{{ requiredEnv "CONCOURSE_DNS" }}
+    externalUrl: {{ requiredEnv "CONCOURSE_URL" }}
   worker:
     baggageclaim:
       driver: overlay
@@ -25,7 +15,7 @@ worker:
   replicas: 2
 web:
   service:
-    type: NodePort
+    type: ClusterIP
   ingress:
     enabled: false
     hosts: [{{ env "CONCOURSE_DNS" }}]
@@ -42,7 +32,3 @@ web:
       kubernetes.io/tls-acme: 'true'
 secrets:
   localUsers: admin:{{ requiredEnv "CONCOURSE_ADMIN_PASSWORD" }}
-  oidcCaCert: |
-    {{ exec "/bin/cat" (list (requiredEnv "ROOT_CA_CERT")) | nindent 12 }}
-  oidcClientId: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_ID" }}
-  oidcClientSecret: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_SECRET" }}
