@@ -1,12 +1,12 @@
-# Platform Operations on Kubernetes
+# Platform Operations on Kubernetes (POOK)
 
 This project demonstrates how to set up and Platform Operations infrastructure on Kubernetes by providing a Reference Implementation of many platform level components such as CI, CD, Metrics, Logging, Policy Enforcement and security.
 
-It uses Pivotal Container Service (PKS) as the Kubernetes provider with RBAC being provided by UAA, but most of this should work without, you'll just have to find an alternative authentication method for your apps.
+It was designed using Pivotal Container Service (PKS) as the Kubernetes provider with RBAC being provided by UAA, but the default environment should work on any Kubernetes cluster with advanced features like Oauth2/openid integration and DNS/Cert management requiring certain platform pieces provided by the underlying cloud.
 
-We take advantage of a few tools to streamline things, firstly [Helm](https://helm.sh) as all of the infrastructure tooling is available in public Helm charts (although some charts may be vendored in here for custom changes). We also use Helmfile which is a project that allows you to compose Helm Charts together.
+We take advantage of a few tools to streamline things, firstly [Helm](https://helm.sh) as all of the infrastructure tooling is available in public Helm charts (although some charts may be vendored in here for custom changes). We use Helmfile to provide a wrapper over helm to allow for more complex installation workflows.
 
-With the goal of doing a gitops style workflow for deploying this, it is expected that you'll have seperate `env` directory(s) containing the customizations for a particular environment or cluster. The example included is not fully functioning, but should be fairly simple to get working.
+With the goal of doing a gitops style workflow for deploying this, it is expected that you'll have seperate `env` directory(s) containing the customizations for a particular environment or cluster.
 
 For the most part you should just need to edit `envs/default/envs.sh` and fill it in with your details. This is a shell script that will export environment variables to be used by Helmfile. The reason for this is that if you have passwords/secrets you can store them outside of git and have the script extract them from wherever you keep them.
 
@@ -32,6 +32,9 @@ The following components are installed in the default environment:
 * Grafana
 * Prometheus
 * EFK (Elasticsearch, Fluentd, Kibana)
+* Concourse
+* Harbor
+* Minio (for Harbor image storage)
 
 
 #### Create Kubernetes Cluster
