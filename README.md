@@ -10,7 +10,7 @@ With the goal of doing a gitops style workflow for deploying this, it is expecte
 
 For the most part you should just need to edit `envs/default/envs.sh` and fill it in with your details. This is a shell script that will export environment variables to be used by Helmfile. The reason for this is that if you have passwords/secrets you can store them outside of git and have the script extract them from wherever you keep them.
 
-## Download tools
+## Prerequisites
 
 It's expected that you already have the basic Kubernetes client tools like `kubectl` installed.
 
@@ -21,7 +21,7 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helmdiff](https://github.com/databus23/helm-diff#install)
 * [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
-## Example Deployments
+## Example
 
 ### default
 
@@ -170,3 +170,15 @@ kubectl -n concourse port-forward svc/concourse-web 8080
 Browse to [http://localhost:8080](http://localhost:8080) in your web browser and login using `admin` and `change-me-please` (although you should have changed that password in envs.sh).
 
 ![Concourse](docs/default/concourse.png)
+
+##### Spinnaker
+
+Forward a port for Spinnaker
+
+```console
+kubectl -n spinnaker port-forward svc/spin-deck 9000
+```
+
+Browse to [http://localhost:9000](http://localhost:9000) in your web browser.
+
+![Concourse](docs/default/spinnaker.png)
