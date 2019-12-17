@@ -20,6 +20,18 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helmdiff](https://github.com/databus23/helm-diff#install)
 * [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
+A happy script:
+
+```bash
+#!/bin/bash
+helm init --client-only
+helm plugin install https://github.com/databus23/helm-diff
+helm plugin install https://github.com/rimusz/helm-tiller
+wget -O ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.95.0/helmfile_linux_amd64
+chmod +x ~/bin/helmfile
+```
+
+
 ## Included Software
 
 ### Metrics and Observability
@@ -44,10 +56,8 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 
 Source the default environment file:
 
-```
 ```bash
 . ./envs/default/envs.sh
-
 ```
 
 Deploy using `helmfile`:
