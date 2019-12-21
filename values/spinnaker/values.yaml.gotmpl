@@ -1,10 +1,3 @@
-halyard:
-  spinnakerVersion: 1.16.2
-  image:
-    tag: 1.28.0
-  persistence:
-    enabled: true
-
 # Configure your Docker registries here
 dockerRegistries:
 - name: dockerhub
@@ -35,12 +28,30 @@ redis:
 minio:
   enabled: false
 
-additionalScripts:
-  create: true
-  data:
-    fix_for_minio.sh: |
-      $HAL_COMMAND config storage s3 edit --path-style-access true
+halyard:
+  spinnakerVersion: 1.16.2
+  image:
+    tag: 1.28.0
 
+  {{- if .Values.ingress.enabled }}
+  additionalProfileConfigMaps:
+    create: true
+    data:
+      gate-local.yml: |-
+        server:
+          tomcat:
+            protocolHeader: X-Forwarded-Proto
+            remoteIpHeader: X-Forwarded-For
+            internalProxies: .*
+            httpsServerPort: X-Forwarded-Port
+  {{- end }}
+  {{- if eq (env "CLOUD_PROVIDER") "gcp" }}
+gcs:
+  enabled: true
+  secretName: gcs-creds
+  project: {{ requiredEnv "SPINNAKER_GCS_PROJECT" }}
+  bucket: {{ requiredEnv "SPINNAKER_GCS_BUCKET"}}
+{{- else }}
 # existing minio is used to store artifacts
 s3:
   enabled: true
@@ -50,12 +61,45 @@ s3:
   secretKey: "{{ requiredEnv "MINIO_SECRET_KEY" }}"
   extraArgs:
     - "--path-style-access true"
+{{- end }}
 
+{{- if .Values.ingress.enabled }}
+ingress:
+  enabled: true
+  host: {{ requiredEnv "SPINNAKER_DNS" }}
+  tls:
+    - secretName: spin-deck-cert
+      hosts:
+        - {{ requiredEnv "SPINNAKER_DNS" }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/acme-dns01-provider: prod-clouddns
+    kubernetes.io/tls-acme: 'true'
+
+ingressGate:
+  enabled: true
+  host: {{ requiredEnv "SPINNAKER_GATE_DNS" }}
+  tls:
+    - secretName: spin-gate-cert
+      hosts:
+        - {{ requiredEnv "SPINNAKER_GATE_DNS" }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/acme-dns01-provider: prod-clouddns
+    kubernetes.io/tls-acme: 'true'
+{{- else }}
 ingress:
   enabled: false
 
 ingressGate:
   enabled: false
+{{- end }}
 
 spinnakerFeatureFlags:
   - artifacts

@@ -1,7 +1,39 @@
 persistence:
   enabled: true
 
+{{- if .Values.ingress.enabled }}
+ingress:
+  enabled: true
+  hosts: [{{ env "GRAFANA_DNS" }}]
+  tls:
+    - secretName: concourse-tls
+      hosts:
+        - {{ env "GRAFANA_DNS" }}
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    cert-manager.io/acme-challenge-type: 'dns01'
+    cert-manager.io/acme-dns01-provider: 'prod-clouddns'
+    kubernetes.io/tls-acme: 'true'
+{{- end }}
+
 adminPassword: {{ requiredEnv "GRAFANA_ADMIN_PASSWORD" }}
+
+grafana.ini:
+  server:
+    root_url: {{ env "GRAFANA_URL" }}
+{{- if eq (env "AUTH_TYPE") "uaa" }}
+  auth.generic_oauth:
+    name: uaa
+    enabled: true
+    scopes: openid profile email
+    client_id: {{ env "GRAFANA_OIDC_CLIENT_ID" }}
+    client_secret: {{ env "GRAFANA_OIDC_CLIENT_SECRET" }}
+    auth_url: {{ env "GRAFANA_OIDC_AUTH_URL" }}
+    token_url: {{ env "GRAFANA_OIDC_TOKEN_URL" }}
+    api_url: {{ env "GRAFANA_OIDC_USERINFO_URL" }}
+{{- end }}
 
 datasources:
   datasources.yaml:
