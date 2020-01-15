@@ -1,8 +1,7 @@
 nameOverride: kibana
 fullnameOverride: kibana
 
-#elasticsearchHosts: https://elasticsearch-master.{{ .Values.elasticsearch.namespace }}:9200
-elasticsearchHosts: https://elasticsearch-master-2.elasticsearch-master-headless:9200
+elasticsearchHosts: https://elasticsearch-master.{{ .Values.elasticsearch.namespace }}:9200
 replicas: 1
 
 protocol: http

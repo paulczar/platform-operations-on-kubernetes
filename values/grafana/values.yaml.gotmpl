@@ -6,7 +6,7 @@ ingress:
   enabled: true
   hosts: [{{ env "GRAFANA_DNS" }}]
   tls:
-    - secretName: concourse-tls
+    - secretName: grafana-tls
       hosts:
         - {{ env "GRAFANA_DNS" }}
   annotations:

@@ -12,7 +12,7 @@ export ENV_DIR="./envs/${ENV_NAME}/"
 export CLOUD_PROVIDER=gcp
 
 ## Google
-export GOOGLE_PROJECT_ID=
+export GOOGLE_PROJECT_ID=pgtm-pczarkowski
 
 ## external-dns and cert-manager need access to a service account with DNS management
 ## Given a downloaded creds json file this will load it into a secret.
@@ -26,10 +26,10 @@ fi
 export EXTERNAL_DNS_SECRET="google-credentials"
 # DNS domain for external-dns controller to manage should be a google dns
 # managed zone
-export EXTERNAL_DNS_DOMAIN=
+export EXTERNAL_DNS_DOMAIN=demo.paulczar.wtf
 
 ## cert-manager
-export CERT_MANAGER_EMAIL=
+export CERT_MANAGER_EMAIL=username.taken@gmail.com
 
 export AUTH_TYPE=uaa
 

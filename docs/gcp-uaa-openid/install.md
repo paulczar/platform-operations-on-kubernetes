@@ -131,7 +131,16 @@ If you want to customize your deployment copy the contents of `/envs/default` to
 
 ```
 
+## Create CRDs for certmanager
+
+```bash
+kubectl apply --validate=false \
+    -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.12/deploy/manifests/00-crds.yaml
+```
+
 ## Create UAA/OIDC clients
+
+> Note: You can skip manually creating the clients by running the script `./scripts/uaa-clients.sh create`.
 
 Install the UAA CLI (ruby):
 
@@ -144,6 +153,12 @@ Log into UAA:
 ```bash
 uaac target $UAA_URL
 uaac token client get admin -s "<uaa-admin-secret-goes-here>"
+```
+
+If you need to create additional UAA users you can do it like so:
+
+```bash
+uaac user add test -p testfred1234 --emails test@here.com
 ```
 
 ### Concourse
@@ -171,12 +186,12 @@ Create UAA Client:
 ```bash
 uaac client add ${HARBOR_OIDC_CLIENT_ID} --scope openid \
   --authorized_grant_types client_credentials,password,refresh_token \
-  --redirect_uri 'https://${HARBOR_URL}  https://${HARBOR_URL}/*' \
+  --redirect_uri "https://${HARBOR_DNS}  https://${HARBOR_DNS}/*" \
   --secret "${HARBOR_OIDC_CLIENT_SECRET}" \
   --authorities clients.read,clients.secret,uaa.resource,scim.write,openid,scim.read
   ```
 
-## Spinnaker
+### Spinnaker
 
 If you have a self signed certificate for your UAA server you'll need to load up a secret with it:
 
@@ -185,7 +200,7 @@ If you have a self signed certificate for your UAA server you'll need to load up
 ```bash
 cp /etc/ssl/certs/java/cacerts /tmp/cacerts
 echo "changeit" | keytool -importcert -alias uaa-ca \
-    -keystore /tmp/cacerts -noprompt -file $UAA_ROOT_CA_CERT
+    -keystore /tmp/cacerts -noprompt -file $UAA_ROOT_CA_FILE
 kubectl create namespace spinnaker
 kubectl -n spinnaker create secret generic \
     java-ca-certs --from-file /tmp/cacerts
@@ -228,6 +243,41 @@ uaac client add "${ELASTICSEARCH_OIDC_CLIENT_ID}" \
   --authorities uaa.resource
   ```
 
+> Note: `sudo sysctl -w vm.max_map_count=262144` must be set on your worker nodes for elasticsearch to start correctly.
+
+
+
+## Install using helmfile
+
+```bash
+helmfile --state-values-file $ENV_DIR/values.yaml.gotmpl apply
+```
+
+## Check services
+
+Check that your ingress resources are up and have DNS and an IP address:
+
+```bash
+$ kubectl get ingress --all-namespaces
+NAMESPACE   NAME                       HOSTS                                      ADDRESS        PORTS     AGE
+concourse   concourse-web              concourse.example.com       55.66.33.22   80, 443   47h
+gangway     gangway                    gangway.example.com         55.66.33.22   80, 443   20h
+harbor      harbor-harbor-ingress      harbor.example.com          55.66.33.22   80, 443   47h
+logging     kibana-kibana              kibana.example.com          55.66.33.22   80, 443   47h
+metrics     grafana                    grafana.example.com         55.66.33.22   80, 443   47h
+spinnaker   spinnaker-spinnaker-deck   spinnaker.example.com       55.66.33.22   80, 443   47h
+spinnaker   spinnaker-spinnaker-gate   api.spinnaker.example.com   55.66.33.22   80, 443   47h
+```
+
+### Grafana
+
+Point your web browser at `https://$GRAFANA_DNS`, log in via OIDC and then browse to the `cluster-monitoring-for-kubernetes` dashboard.
+
+![grafana dashboard](./grafana.png)
+
+### Kibana
+
+
 UAA/OIDC Auth requires an Elastic license you can start a 30 day trial like so:
 
 ```bash
@@ -239,65 +289,23 @@ You also need to do some role mapping, the following will give all oidc users ac
 
 ```bash
 kubectl -n logging exec -ti elasticsearch-master-0 \
--- curl -k -X PUT "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_security/role_mapping/oidc-kibana?pretty" -H 'Content-Type: application/json' -d'
+-- curl -k -X POST "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_security/role/kubernetes_indices?pretty" -H 'Content-Type: application/json' -d '
+{"cluster":[],"indices":[{"names":["kubernetes_cluster-*"],"privileges":["read"]}]}'
+
+kubectl -n logging exec -ti elasticsearch-master-0 \
+-- curl -k -X POST "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_security/role_mapping/oidc-kibana?pretty" -H 'Content-Type: application/json' -d'
 {
-  "roles": [ "kibana_user" ],
-  "enabled": true,
-  "rules": {
-    "field": { "realm.name": "oidc1" }
-  }
-}
-'
+  "roles": ["kibana_user","kubernetes_indices" ],
+  "enabled": true,"rules": {"field": { "realm.name": "oidc1" }}
+}'
 ```
 
-
-## Install using helmfile
-
-```bash
-helmfile --state-values-file $ENV_DIR/values.yaml apply
-```
-
-## Check services
-
-### Grafana
-
-```bash
-kubectl -n metrics port-forward svc/grafana 3000
-```
-
-Point your web browser at `http://localhost:3000` and then browse to the `cluster-monitoring-for-kubernetes` dashboard.
-
-![grafana dashboard](./grafana.png)
-
-### Kibana
-
-> Note: `sudo sysctl -w vm.max_map_count=262144` must be set on your worker nodes for elasticsearch to start correctly. Or you can enable privileged mode which is not recommended.
-
-```bash
-kubectl -n logging port-forward svc/kibana-kibana 5601
-```
-
-Use `curl` to set a default index pattern
-
-```
-curl -XPOST -H "Content-Type: application/json" -H "kbn-xsrf: true" localhost:5601/api/kibana/settings/defaultIndex -d '{"value": "kubernetes_cluster-*"}'
-```
-
-Point your web browser at `http://localhost:5601/app/kibana#/discover`
+Point your web browser at `https://$KIBANA_DNS/app/kibana#/discover`
 
 ![kibana dashboard](./kibana.png)
 
 ### Harbor
 
-Find the Harbor URL from the Ingress resource (it should also be $HARBOR_DNS in your env vars):
-
-```bash
-$ kubectl -n harbor get ingress
-NAME                    HOSTS                      ADDRESS           PORTS     AGE
-harbor-harbor-ingress   harbor.demo.paulczar.wtf   104.44.176.161    80, 443   21h
-
-$ echo $HARBOR_DNS
-harbor.demo.paulczar.wtf
 ```
 
 Once deployed you need to tell the API to use the provided UAA authentication:
@@ -336,19 +344,7 @@ You should be able to see your recently pushed alpine image at [https://$HARBOR_
 
 ![harbor](./harbor.png)
 
-
 ### Concourse
-
-Find the Concourse URL from the Ingress resource (it should also be $HARBOR_DNS in your env vars):
-
-```bash
-$ kubectl -n concourse get ingress
-NAME            HOSTS                         ADDRESS           PORTS     AGE
-concourse-web   concourse.demo.paulczar.wtf   104.154.176.161   80, 443   22h
-
-$ echo $CONCOURSE_URL
-https://concourse.demo.paulczar.wtf
-```
 
 Browse to [$CONCOURSE_URL]($CONCOURSE_URL) in your web browser and login using your UAA creds.
 
@@ -366,6 +362,10 @@ Forward a port for Spinnaker
 kubectl -n spinnaker port-forward svc/spin-deck 9000
 ```
 
-Browse to [http://localhost:9000](http://localhost:9000) in your web browser.
+Browse to [$SPINNAKER_URL](SPINNAKER_URL) in your web browser.
+
+```console
+firefox $SPINNAKER_URL
+```
 
 ![Spinnaker](./spinnaker.png)
