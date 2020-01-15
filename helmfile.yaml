@@ -6,7 +6,7 @@ helmDefaults:
 environments:
   default:
     values:
-    - ./envs/default/values.yaml.gotmpl
+    - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
 
 repositories:
 {{- range .Values }}
@@ -29,20 +29,27 @@ releases:
       - values/cluster-system/extras.yaml.gotmpl
 {{- end }}
 
-{{- if and (.Values.elasticsearch.enabled) (env "ELASTICSEARCH_PASSWORD") }}
-  - name: elasticsearch-credentials
+{{- if .Values.elasticsearch.enabled }}
+  - name: elasticsearch-secrets
     namespace: {{ .Values.elasticsearch.namespace }}
     chart: ./charts/mystique
     values:
-      - values/elasticsearch/credentials.yaml.gotmpl
+      - values/elasticsearch/secrets.yaml.gotmpl
 {{- end }}
 
-{{- if .Values.harbor.enabled }}
-  - name: harbor-certs
+{{- if and (.Values.harbor.enabled) (or (not .Values.ingress.enabled) (env "UAA_ROOT_CA_CERT")) }}
+  - name: harbor-secrets
     namespace: {{ .Values.harbor.namespace }}
     chart: ./charts/mystique
     values:
-      - values/harbor/generated-certs.yaml
+      - values/harbor/secrets.yaml.gotmpl
+{{- end }}
+{{- if .Values.spinnaker.enabled }}
+  - name: spinnaker-secrets
+    namespace: {{ .Values.spinnaker.namespace }}
+    chart: ./charts/mystique
+    values:
+      - values/spinnaker/secrets.yaml.gotmpl
 {{- end }}
 
 {{- range .Values }}
@@ -52,6 +59,8 @@ releases:
     chart: {{ .chart }}
     version: "{{ .version }}"
     values:
-      {{ .values | toYaml | indent 6 }}
+    {{- range .values }}
+      - {{ . }}
+    {{- end }}
 {{- end }}
 {{- end }}

@@ -1,3 +1,6 @@
+nameOverride: fluentbit
+fullnameOverride: fluentbit
+
 backend:
   type: es
   es:
@@ -7,6 +10,8 @@ backend:
     http_passwd_secret: elasticsearch-credentials
     http_passwd_secret_key: password
     {{- end }}
+    tls: "on"
+    tls_verify: "off"
 
 image:
   fluent_bit:

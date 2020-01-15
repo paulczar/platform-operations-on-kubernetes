@@ -14,18 +14,43 @@ roles:
   ingest: "true"
   data: "true"
 
-protocol: http
+protocol: https
+
+secretMounts:
+  - name: elastic-certificates
+    secretName: elastic-certificates
+    path: /usr/share/elasticsearch/config/certs
 
 esConfig:
   elasticsearch.yml: |
-    # xpack.security.enabled: true
-    # xpack.security.transport.ssl.enabled: false
-    # xpack.security.transport.ssl.verification_mode: certificate
-    # xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-    # xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-    # xpack.security.http.ssl.enabled: true
-    # xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
-    # xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    xpack.security.enabled: true
+    xpack.security.transport.ssl.enabled: true
+    xpack.security.transport.ssl.verification_mode: certificate
+    xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certs/tls.key
+    xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certs/tls.crt
+    xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certs/ca.crt"]
+    xpack.security.http.ssl.enabled: true
+    xpack.security.http.ssl.verification_mode: certificate
+    xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certs/tls.key
+    xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certs/tls.crt
+    xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certs/ca.crt"]
+{{- if eq "uaa" (env "AUTH_TYPE") }}
+    xpack.security.authc.token.enabled: true
+    xpack.security.authc.realms.oidc.oidc1:
+      order: 2
+      rp.client_id: "{{ env "ELASTICSEARCH_OIDC_CLIENT_ID" }}"
+      rp.response_type: code
+      rp.redirect_uri: "{{ env "KIBANA_URL" }}/api/security/v1/oidc"
+      op.issuer: "{{ env "ELASTICSEARCH_OIDC_TOKEN_URL" }}"
+      op.authorization_endpoint: "{{ env "ELASTICSEARCH_OIDC_AUTH_URL" }}"
+      op.token_endpoint: "{{ env "ELASTICSEARCH_OIDC_TOKEN_URL" }}"
+      op.jwkset_path: "{{ env "ELASTICSEARCH_OIDC_JWKS_URL" }}"
+      op.userinfo_endpoint: "{{ env "ELASTICSEARCH_OIDC_USERINFO_URL" }}"
+      op.endsession_endpoint: "{{ env "ELASTICSEARCH_OIDC_LOGOUT_URL" }}"
+      rp.post_logout_redirect_uri: "{{ env "KIBANA_URL" }}/logged_out"
+      claims.principal: user_name
+      #claims.groups: "http://example.info/claims/groups"
+{{- end }}
 {{- if env "ELASTICSEARCH_PASSWORD" }}
 extraEnvs:
   - name: "ELASTIC_PASSWORD"
@@ -36,7 +61,11 @@ extraEnvs:
   - name: "ELASTIC_USERNAME"
     value: {{ requiredEnv "ELASTICSEARCH_USERNAME" | quote }}
 {{- end }}
-# secretMounts:
-#   - name: elastic-certificates
-#     secretName: elastic-certificates
-#     path: /usr/share/elasticsearch/config/certs
+
+{{- if eq "uaa" (env "AUTH_TYPE") }}
+keystore:
+  - secretName: elastic-oidc-client
+    items:
+    - key: client-secret
+      path: xpack.security.authc.realms.oidc.oidc1.rp.client_secret
+{{- end }}

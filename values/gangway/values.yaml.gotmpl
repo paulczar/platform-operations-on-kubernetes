@@ -1,0 +1,111 @@
+replicaCount: 1
+
+image:
+  repository: paulczar/gangway
+  tag: workshop
+  pullPolicy: IfNotPresent
+
+nameOverride: gangway
+fullnameOverride: gangway
+
+# Specify a CA cert to trust for self signed certificates at the Oauth2 URLs.  Be careful to indent one level beyond the
+# trustedCACert key:
+# trustedCACert: |-
+#  -----BEGIN CERTIFICATE-----
+#  ...
+#  -----END CERTIFICATE-----
+
+gangway:
+  # The address to listen on. Defaults to 0.0.0.0 to listen on all interfaces.
+  # Env var: GANGWAY_HOST
+  # host: 0.0.0.0
+
+  # The port to listen on. Defaults to 8080.
+  # Env var: GANGWAY_PORT
+  port: 8080
+
+  # Should Gangway serve TLS vs. plain HTTP? Default: false
+  # Env var: GANGWAY_SERVE_TLS
+  # serveTLS: false
+
+  # The public cert file (including root and intermediates) to use when serving TLS.
+  # Env var: GANGWAY_CERT_FILE
+  # certFile: /etc/gangway/tls/tls.crt
+
+  # The private key file when serving TLS.
+  # Env var: GANGWAY_KEY_FILE
+  # keyFile: /etc/gangway/tls/tls.key
+
+  clusterName: "{{ env "ENV_NAME" }}"
+  authorizeURL: {{ env "GANGWAY_OIDC_AUTH_URL"}}
+  tokenURL: {{ env "GANGWAY_OIDC_TOKEN_URL" }}
+  audience: {{ env "GANGWAY_OIDC_USERINFO_URL" }}
+  scopes: ["openid","uaa.user", "roles"]
+  redirectURL: "{{ env "GANGWAY_URL" }}/callback"
+  clientID: {{ env "GANGWAY_OIDC_CLIENT_ID" }}
+  clientSecret: "{{ env "GANGWAY_OIDC_CLIENT_SECRET" }}"
+  allowEmptyClientSecret: true
+  usernameClaim: "user_name"
+  namespaceClaim: "user_name"
+  emailClaim: "user_name"
+
+  apiServerURL: {{ requiredEnv "K8S_API_URL" }}
+
+  sessionKey: {{ requiredEnv "GANGWAY_SESSION_KEY" }}
+
+tls: {}
+  # certData: |
+  #   -----BEGIN CERTIFICATE-----
+  #   ...
+  #   -----END CERTIFICATE-----
+  # keyData: |
+  #   -----BEGIN ENCRYPTED PRIVATE KEY-----
+  #   ...
+  #   -----END ENCRYPTED PRIVATE KEY-----
+
+  # Name of an existing secret containing `tls.cert` and `tls.key`.
+  # Mounted on the default tls path `/etc/gangway/tls`
+  # existingSecret: ""
+
+extraVolumes: []
+
+extraVolumeMounts: []
+
+livenessProbe:
+  # HTTP or HTTPS
+  scheme: HTTP
+
+readinessProbe:
+  # HTTP or HTTPS
+  scheme: HTTP
+
+service:
+  type: ClusterIP
+  port: 80
+  # Specifies a loadBalancerIP when using LoadBalancer service type
+  # loadBalancerIP: 192.168.0.51
+
+{{- if .Values.ingress.enabled }}
+ingress:
+  enabled: true
+  hosts: [{{ env "GANGWAY_DNS" }}]
+  tls:
+    - secretName: gangway-tls
+      hosts:
+        - {{ env "GANGWAY_DNS" }}
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    cert-manager.io/acme-challenge-type: 'dns01'
+    cert-manager.io/acme-dns01-provider: 'prod-clouddns'
+    kubernetes.io/tls-acme: 'true'
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+{{- end }}
+
+resources:
+  cpu: 100m
+  memory: 128Mi
+  requests:
+  cpu: 100m
+  memory: 128Mi

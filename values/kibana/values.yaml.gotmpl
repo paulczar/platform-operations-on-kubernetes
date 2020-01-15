@@ -1,5 +1,7 @@
-elasticsearchHosts: http://elasticsearch-master.{{ .Values.elasticsearch.namespace }}:9200
+nameOverride: kibana
+fullnameOverride: kibana
 
+elasticsearchHosts: https://elasticsearch-master.{{ .Values.elasticsearch.namespace }}:9200
 replicas: 1
 
 protocol: http
@@ -13,4 +15,42 @@ extraEnvs:
       secretKeyRef:
         name: elasticsearch-credentials
         key: password
+{{- end }}
+
+kibanaConfig:
+  kibana.yml: |
+    server.ssl:
+      enabled: false
+      #key: /usr/share/kibana/config/certs/tls.key
+      #certificate: /usr/share/kibana/config/certs/tls.crt
+    elasticsearch.ssl:
+      certificateAuthorities: /usr/share/kibana/config/certs/ca.crt
+      verificationMode: certificate
+{{- if eq "uaa" (env "AUTH_TYPE") }}
+    xpack.security.authc.providers: [oidc, basic]
+    xpack.security.authc.oidc.realm: "oidc1"
+    xpack.security.enabled: true
+    server.xsrf.whitelist: [/api/security/v1/oidc]
+{{- end }}
+
+secretMounts:
+  - name: elastic-certificates
+    secretName: elastic-certificates
+    path: /usr/share/kibana/config/certs
+
+{{- if .Values.ingress.enabled }}
+ingress:
+  enabled: true
+  hosts: [{{ env "KIBANA_DNS" }}]
+  tls:
+    - secretName: concourse-tls
+      hosts:
+        - {{ env "KIBANA_DNS" }}
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    cert-manager.io/acme-challenge-type: 'dns01'
+    cert-manager.io/acme-dns01-provider: 'prod-clouddns'
+    kubernetes.io/tls-acme: 'true'
 {{- end }}
