@@ -40,21 +40,18 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 
 ## Example Deployment
 
-> Note: For more detailed instructions see [docs/default/install.md](docs/default/install.md)
+### Default environment
 
-Source the default environment file:
+This will deploy a default environment with no external auth or ingress set up.
 
-```
-```bash
-. ./envs/default/envs.sh
+See [docs/default/install.md](docs/default/install.md)
 
-```
+### OIDC/UAA environment
 
-Deploy using `helmfile`:
+This will deploy an environment with Ingress, SSL, DNS, and UAA backed OIDC authentication for all apps.
 
-```bash
-helmfile apply
-```
+See [docs/gcp-uaa-openid/install.md](docs/gcp-uaa-openid/install.md)
+
 
 ## Customizing Platform Operations on Kubernetes
 
