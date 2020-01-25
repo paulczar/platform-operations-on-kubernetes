@@ -56,7 +56,6 @@ If you want to customize your deployment copy the contents of `/envs/default` to
 
 ```bash
 . ./envs/default/envs.sh
-
 ```
 
 ## Install using helmfile
@@ -70,7 +69,7 @@ helmfile --state-values-file $ENV_DIR/values.yaml diff
 ### Grafana
 
 ```bash
-kubectl -n metrics port-forward svc/grafana 3000
+kubectl -n metrics port-forward svc/grafana 3000:80
 ```
 
 Point your web browser at `http://localhost:3000` and then browse to the `cluster-monitoring-for-kubernetes` dashboard.
