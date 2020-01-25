@@ -95,8 +95,35 @@ prometheus:
     - values/prometheus/values.yaml.gotmpl
 
 ## Logging
-elasticsearch:
+## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
+loki:
   enabled: true
+  repository:
+    url: https://grafana.github.io/loki/charts
+    name: loki
+  name: loki
+  namespace: logging
+  chart: loki/loki
+  version: 0.24.0
+  values:
+    - values/loki/values.yaml.gotmpl
+  raw:
+    - values/loki/raw.yaml.gotmpl
+
+promtail:
+  enabled: true
+  repository:
+    url: https://grafana.github.io/loki/charts
+    name: loki
+  name: promtail
+  namespace: logging
+  chart: loki/promtail
+  version: 0.17.0
+  values:
+    - values/promtail/values.yaml.gotmpl
+
+elasticsearch:
+  enabled: false
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -108,7 +135,7 @@ elasticsearch:
     - values/elasticsearch/values.yaml.gotmpl
 
 kibana:
-  enabled: true
+  enabled: false
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -119,7 +146,7 @@ kibana:
   values:
     - values/kibana/values.yaml.gotmpl
 fluentbit:
-  enabled: true
+  enabled: false
   name: fluentbit
   namespace: logging
   chart: stable/fluent-bit

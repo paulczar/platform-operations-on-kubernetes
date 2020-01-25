@@ -106,6 +106,11 @@ export GRAFANA_OIDC_AUTH_URL=${UAA_URL}/oauth/authorize
 export GRAFANA_OIDC_TOKEN_URL=${UAA_URL}/oauth/token
 export GRAFANA_OIDC_USERINFO_URL=${UAA_URL}/userinfo
 
+## Loki
+export LOKI_GCS_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_SECRET}
+export LOKI_GCS_PROJECT=${GOOGLE_PROJECT_ID}
+export LOKI_GCS_BUCKET=${ENV_NAME}-loki
+
 ## Elasticsearch
 export ELASTICSEARCH_USERNAME=elastic
 export ELASTICSEARCH_PASSWORD=change-this-password

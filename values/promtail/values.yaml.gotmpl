@@ -1,0 +1,30 @@
+loki:
+  serviceName: loki
+
+volumes:
+  - name: docker
+    hostPath:
+      path: /var/vcap/store/docker/docker/containers
+  - name: pods
+    hostPath:
+      path: /var/log/pods
+  - hostPath:
+      path: /var/vcap/store
+    name: varvcapstore
+  - hostPath:
+      path: /var/vcap/data
+    name: varvcapdata
+
+volumeMounts:
+  - name: docker
+    mountPath: /var/lib/docker/containers
+    readOnly: true
+  - name: pods
+    mountPath: /var/log/pods
+    readOnly: true
+  - mountPath: /var/vcap/store
+    name: varvcapstore
+    readOnly: true
+  - mountPath: /var/vcap/data
+    name: varvcapdata
+    readOnly: true

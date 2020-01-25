@@ -1,0 +1,19 @@
+manifests:
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+# spec:
+#   accessModes:
+#   - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Gi
+#   storageClassName: standard
+{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
+  - name: loki-secrets
+    apiVersion: v1
+    kind: Secret
+    body:
+      data:
+        gcs-key.json: {{ env "LOKI_GCS_CREDENTIALS" }}
+{{- end }}

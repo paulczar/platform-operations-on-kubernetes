@@ -1,0 +1,35 @@
+persistence:
+  enabled: true
+
+{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
+config:
+  schema_config:
+    configs:
+    - from: 2018-04-15
+      store: boltdb
+      object_store: gcs
+      schema: v9
+      index:
+        prefix: index_
+        period: 168h
+
+  storage_config:
+    gcs:
+      bucket_name: {{ requiredEnv "LOKI_GCS_BUCKET" }}
+{{- end }}
+
+{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
+extraVolumes:
+  - name: loki-secrets
+    secret:
+      secretName: loki-secrets
+
+extraVolumeMounts:
+  - name: loki-secrets
+    mountPath: /secrets
+    readOnly: true
+
+env:
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: "/secrets/gcs-key.json"
+{{- end }}
