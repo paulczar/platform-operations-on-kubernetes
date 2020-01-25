@@ -52,8 +52,18 @@ releases:
       - values/spinnaker/secrets.yaml.gotmpl
 {{- end }}
 
+
 {{- range .Values }}
 {{- if .enabled }}
+{{- if hasKey . "raw" }}
+  - name: {{ .name }}-raw
+    namespace: {{ .namespace }}
+    chart: ./charts/mystique
+    values:
+    {{- range .raw }}
+      - {{ . }}
+    {{- end }}
+{{- end }}
   - name: {{ .name }}
     namespace: {{ .namespace }}
     chart: {{ .chart }}

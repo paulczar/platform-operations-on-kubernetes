@@ -39,12 +39,17 @@ datasources:
   datasources.yaml:
    apiVersion: 1
    datasources:
-   - name: prometheus
+   - name: {{ env "ENV_NAME" }}-prometheus
      type: prometheus
      url: http://prometheus-server.{{ .Values.prometheus.namespace }}
      access: proxy
      isDefault: true
-
+{{- if .Values.loki.enabled }}
+   - name: {{ env "ENV_NAME" }}-loki
+     type: loki
+     url: http://loki.{{ .Values.loki.namespace }}:3100
+     access: proxy
+{{- end }}
 dashboardProviders:
  dashboardproviders.yaml:
    apiVersion: 1
@@ -63,12 +68,15 @@ dashboards:
     prometheus-stats:
       gnetId: 2
       revision: 2
-      datasource: prometheus
+      datasource: {{ env "ENV_NAME" }}-prometheus
     pks-stats:
       gnetId: 10000
       revision: 1
-      datasource: prometheus
+      datasource: {{ env "ENV_NAME" }}-prometheus
     spring-jvm-actuator:
       gnetId: 4701
       revision:
-      datasource: prometheus
+      datasource: {{ env "ENV_NAME" }}-prometheus
+    loki-promtail:
+      gnetId: 10880
+      datasource: {{ env "ENV_NAME" }}-prometheus
