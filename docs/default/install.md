@@ -6,7 +6,7 @@ The following components are installed in the default environment:
 
 * Grafana
 * Prometheus
-* EFK (Elasticsearch, Fluentd, Kibana)
+* Loki / Promtail
 * Concourse
 * Harbor
 * Spinnaker
@@ -49,6 +49,8 @@ helm tiller install
 ## Fill out envs.sh
 
 If you want to customize your deployment copy the contents of `/envs/default` to another location and modify `envs.sh` and `values.yaml` accordingly.
+
+If you're using PKS make sure you set the env variable `PKS=true`. This will help configure the correct paths etc for host mounts.
 
 ## Load environment
 

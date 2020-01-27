@@ -11,6 +11,10 @@ export ENV_DIR="./envs/${ENV_NAME}/"
 # cloud provider (currently only supports gcp, leave blank to use minio for local object storage)
 export CLOUD_PROVIDER=gcp
 
+## PKS
+# Uncomment this if the cluster is build with PKS
+# export PKS=true
+
 ## Google
 export GOOGLE_PROJECT_ID=pgtm-pczarkowski
 

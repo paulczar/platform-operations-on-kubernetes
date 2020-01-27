@@ -7,6 +7,14 @@ export ENV_NAME=default
 # containing this script sits relative to the helmfile dir.
 export ENV_DIR="./envs/${ENV_NAME}/"
 
+## General
+# cloud provider (currently only supports gcp, leave blank to use minio for local object storage)
+# export CLOUD_PROVIDER=gcp
+
+## PKS
+# Uncomment this if the cluster is build with PKS
+# export PKS=true
+
 ## external-dns
 # pre-created secret containing your GCP creds. gcp-lb-tags chart creates a secret
 # we can use here.

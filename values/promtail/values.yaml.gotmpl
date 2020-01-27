@@ -1,6 +1,7 @@
 loki:
   serviceName: loki
 
+{{- if env "PKS" }}
 volumes:
   - name: docker
     hostPath:
@@ -28,3 +29,20 @@ volumeMounts:
   - mountPath: /var/vcap/data
     name: varvcapdata
     readOnly: true
+{{- else }}
+volumes:
+- name: docker
+  hostPath:
+    path: /var/lib/docker/containers
+- name: pods
+  hostPath:
+    path: /var/log/pods
+
+volumeMounts:
+- name: docker
+  mountPath: /var/lib/docker/containers
+  readOnly: true
+- name: pods
+  mountPath: /var/log/pods
+  readOnly: true
+{{- end }}
