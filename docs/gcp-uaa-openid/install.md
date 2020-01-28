@@ -8,7 +8,7 @@ The following components are installed in the default environment:
 
 * Grafana
 * Prometheus
-* EFK (Elasticsearch, Fluentd, Kibana)
+* Loki / Promtail
 * Concourse
 * Harbor
 * Spinnaker

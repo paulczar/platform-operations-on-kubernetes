@@ -78,23 +78,9 @@ Point your web browser at `http://localhost:3000` and then browse to the `cluste
 
 ![grafana dashboard](./grafana.png)
 
-### Kibana
+You should also be able to explore the Logs from Loki via the Explore icon on the left hand menu.
 
-> Note: `sudo sysctl -w vm.max_map_count=262144` must be set on your worker nodes for elasticsearch to start correctly. Or you can enable privileged mode which is not recommended.
-
-```bash
-kubectl -n logging port-forward svc/kibana-kibana 5601
-```
-
-Use `curl` to set a default index pattern
-
-```
-curl -XPOST -H "Content-Type: application/json" -H "kbn-xsrf: true" localhost:5601/api/kibana/settings/defaultIndex -d '{"value": "kubernetes_cluster-*"}'
-```
-
-Point your web browser at `http://localhost:5601/app/kibana#/discover`
-
-![kibana dashboard](./kibana.png)
+![loki logs](./loki.png)
 
 ### Harbor
 
