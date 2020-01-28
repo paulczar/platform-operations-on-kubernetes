@@ -230,23 +230,6 @@ uaac client add "${GRAFANA_OIDC_CLIENT_ID}" \
   --authorities uaa.resource
   ```
 
-### Elasticsearch / Kibana
-
-Create a UAA Client for Elasticsearch
-
-```bash
-uaac client add "${ELASTICSEARCH_OIDC_CLIENT_ID}" \
-  --scope openid,profile,email \
-  --authorized_grant_types password,refresh_token,authorization_code,client_credentials \
-  --redirect_uri "${KIBANA_URL}/api/security/v1/oidc" \
-  --secret "${ELASTICSEARCH_OIDC_CLIENT_SECRET}" \
-  --authorities uaa.resource
-  ```
-
-> Note: `sudo sysctl -w vm.max_map_count=262144` must be set on your worker nodes for elasticsearch to start correctly.
-
-
-
 ## Install using helmfile
 
 ```bash
@@ -263,7 +246,6 @@ NAMESPACE   NAME                       HOSTS                                    
 concourse   concourse-web              concourse.example.com       55.66.33.22   80, 443   47h
 gangway     gangway                    gangway.example.com         55.66.33.22   80, 443   20h
 harbor      harbor-harbor-ingress      harbor.example.com          55.66.33.22   80, 443   47h
-logging     kibana-kibana              kibana.example.com          55.66.33.22   80, 443   47h
 metrics     grafana                    grafana.example.com         55.66.33.22   80, 443   47h
 spinnaker   spinnaker-spinnaker-deck   spinnaker.example.com       55.66.33.22   80, 443   47h
 spinnaker   spinnaker-spinnaker-gate   api.spinnaker.example.com   55.66.33.22   80, 443   47h
@@ -275,34 +257,10 @@ Point your web browser at `https://$GRAFANA_DNS`, log in via OIDC and then brows
 
 ![grafana dashboard](./grafana.png)
 
-### Kibana
+You should also be able to explore the Logs from Loki via the Explore icon on the left hand menu.
 
+![loki logs](./loki.png)
 
-UAA/OIDC Auth requires an Elastic license you can start a 30 day trial like so:
-
-```bash
-kubectl -n logging exec -ti elasticsearch-master-0 \
-  -- curl -k -X POST "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_license/start_trial?acknowledge=true&pretty"
-```
-
-You also need to do some role mapping, the following will give all oidc users access to kibana:
-
-```bash
-kubectl -n logging exec -ti elasticsearch-master-0 \
--- curl -k -X POST "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_security/role/kubernetes_indices?pretty" -H 'Content-Type: application/json' -d '
-{"cluster":[],"indices":[{"names":["kubernetes_cluster-*"],"privileges":["read"]}]}'
-
-kubectl -n logging exec -ti elasticsearch-master-0 \
--- curl -k -X POST "https://elastic:${ELASTICSEARCH_PASSWORD}@localhost:9200/_security/role_mapping/oidc-kibana?pretty" -H 'Content-Type: application/json' -d'
-{
-  "roles": ["kibana_user","kubernetes_indices" ],
-  "enabled": true,"rules": {"field": { "realm.name": "oidc1" }}
-}'
-```
-
-Point your web browser at `https://$KIBANA_DNS/app/kibana#/discover`
-
-![kibana dashboard](./kibana.png)
 
 ### Harbor
 
@@ -355,12 +313,6 @@ firefox $CONCOURSE_URL
 ![Concourse](./concourse.png)
 
 ### Spinnaker
-
-Forward a port for Spinnaker
-
-```console
-kubectl -n spinnaker port-forward svc/spin-deck 9000
-```
 
 Browse to [$SPINNAKER_URL](SPINNAKER_URL) in your web browser.
 
