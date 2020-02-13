@@ -5,7 +5,8 @@ export ENV_NAME=default
 
 # relative or absolute path of your envs directory, effectively where the directory
 # containing this script sits relative to the helmfile dir.
-export ENV_DIR="./envs/${ENV_NAME}/"
+# The following should figure it out, unless symlinks etc.
+export ENV_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 ## General
 # cloud provider (currently only supports gcp, leave blank to use minio for local object storage)
@@ -59,3 +60,14 @@ export ELASTICSEARCH_PASSWORD=
 ## Minio
 export MINIO_ACCESS_KEY=minio-access-key
 export MINIO_SECRET_KEY=minio-secret-key
+
+current_dir() {
+  SOURCE="${BASH_SOURCE[0]}"
+  while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  echo $DIR
+}

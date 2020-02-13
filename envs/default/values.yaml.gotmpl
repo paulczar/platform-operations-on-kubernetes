@@ -1,168 +1,54 @@
 ## Cluster Operations
+clusterSystem:
+  enabled: true
+
 ingress:
   enabled: false
-  name: ingress
-  namespace: cluster-system
-  chart: stable/nginx-ingress
-  version: 1.6.17
-  values:
-    - values/cluster-system/ingress.yaml.gotmpl
 
 certManager:
   enabled: false
-  repository:
-    name: jetstack
-    url: https://charts.jetstack.io
-  name: cert-manager
-  namespace: cluster-system
-  chart: jetstack/cert-manager
-  version: v0.11.0
-  values:
-    - values/cluster-system/cert-manager.yaml.gotmpl
 
 externalDNS:
   enabled: false
-  name: external-dns
-  namespace: cluster-system
-  version: 2.6.4
-  chart: stable/external-dns
-  values:
-    - values/cluster-system/external-dns.yaml.gotmpl
 
 ## CI/CD
 spinnaker:
   enabled: true
-  name: spinnaker
-  namespace: spinnaker
-  timeout: 600
-  version: 1.22.4
-  chart: stable/spinnaker
-  values:
-    - values/spinnaker/values.yaml.gotmpl
 
 concourse:
   enabled: true
-  name: concourse
-  namespace: concourse
-  chart: stable/concourse
-  version: 6.2.2
-  values:
-    - values/concourse/values.yaml.gotmpl
 
 ## Artifact Storage
 
 minio:
   enabled: true
-  repository:
-    name: bitnami
-    url: https://charts.bitnami.com/bitnami
-  name: minio
-  namespace: minio
-  chart: bitnami/minio
-  version: 2.2.0
-  values:
-    - values/minio/values.yaml.gotmpl
 
 harbor:
   enabled: true
-  repository:
-    name: harbor
-    url: https://helm.goharbor.io
-  name: harbor
-  namespace: harbor
-  chart: harbor/harbor
-  version: 1.3.0
-  values:
-    - values/harbor/values.yaml.gotmpl
 
 ## Metrics
 grafana:
   enabled: true
-  name: grafana
-  namespace: metrics
-  chart: stable/grafana
-  version: 4.4.0
-  values:
-    - values/grafana/values.yaml.gotmpl
 
 prometheus:
   enabled: true
-  name: prometheus
-  namespace: metrics
-  chart: stable/prometheus
-  version: 8.11.4
-  values:
-    - values/prometheus/values.yaml.gotmpl
 
 ## Logging
 ## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
 loki:
   enabled: true
-  repository:
-    url: https://grafana.github.io/loki/charts
-    name: loki
-  name: loki
-  namespace: logging
-  chart: loki/loki
-  version: 0.24.0
-  values:
-    - values/loki/values.yaml.gotmpl
-  raw:
-    - values/loki/raw.yaml.gotmpl
 
 promtail:
   enabled: true
-  repository:
-    url: https://grafana.github.io/loki/charts
-    name: loki
-  name: promtail
-  namespace: logging
-  chart: loki/promtail
-  version: 0.17.0
-  values:
-    - values/promtail/values.yaml.gotmpl
 
 elasticsearch:
   enabled: false
-  repository:
-    url: https://helm.elastic.co
-    name: elastic
-  name: elasticsearch
-  namespace: logging
-  chart: elastic/elasticsearch
-  version: 7.4.1
-  values:
-    - values/elasticsearch/values.yaml.gotmpl
 
 kibana:
   enabled: false
-  repository:
-    url: https://helm.elastic.co
-    name: elastic
-  name: kibana
-  namespace: logging
-  chart: elastic/kibana
-  version: 7.4.1
-  values:
-    - values/kibana/values.yaml.gotmpl
+
 fluentbit:
   enabled: false
-  name: fluentbit
-  namespace: logging
-  chart: stable/fluent-bit
-  version: 2.7.3
-  values:
-    - values/fluentbit/values.yaml.gotmpl
 
-# misc
 kubeapps:
   enabled: false
-  repository:
-    url: https://charts.bitnami.com/bitnami
-    name: bitnami
-  name: kubeapps
-  namespace: kubeapps
-  chart: bitnami/kubeapps
-  version: 3.2.0
-  values:
-    - values/kubeapps/values.yaml.gotmpl

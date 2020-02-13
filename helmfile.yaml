@@ -1,12 +1,16 @@
 helmDefaults:
   timeout: 600
   recreatePods: false
+{{- if not (env "HELMFILE_HELM3") }}
   tillerless: true
+{{- end }}
 
 environments:
   default:
     values:
+    - values.yaml
     - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
+
 
 repositories:
 {{- range .Values }}
@@ -16,43 +20,7 @@ repositories:
 {{- end }}
 {{- end }}
 
-
 releases:
-  ## A special case where we want to load
-{{- if or (.Values.certManager.enabled) (.Values.externalDNS.enabled) }}
-  ## Mystique is a chart embedded in this repo that can be used to create
-  ## general kubernetes resources such as secrets from files as shown here
-  - name: cluster-system-extras
-    namespace: cluster-system
-    chart: ./charts/mystique
-    values:
-      - values/cluster-system/extras.yaml.gotmpl
-{{- end }}
-
-{{- if .Values.elasticsearch.enabled }}
-  - name: elasticsearch-secrets
-    namespace: {{ .Values.elasticsearch.namespace }}
-    chart: ./charts/mystique
-    values:
-      - values/elasticsearch/secrets.yaml.gotmpl
-{{- end }}
-
-{{- if and (.Values.harbor.enabled) (or (not .Values.ingress.enabled) (env "UAA_ROOT_CA_CERT")) }}
-  - name: harbor-secrets
-    namespace: {{ .Values.harbor.namespace }}
-    chart: ./charts/mystique
-    values:
-      - values/harbor/secrets.yaml.gotmpl
-{{- end }}
-{{- if .Values.spinnaker.enabled }}
-  - name: spinnaker-secrets
-    namespace: {{ .Values.spinnaker.namespace }}
-    chart: ./charts/mystique
-    values:
-      - values/spinnaker/secrets.yaml.gotmpl
-{{- end }}
-
-
 {{- range .Values }}
 {{- if .enabled }}
 {{- if hasKey . "raw" }}
@@ -63,14 +31,37 @@ releases:
     {{- range .raw }}
       - {{ . }}
     {{- end }}
+## If using helm3 make sure namespaces exist
+{{- if env "HELMFILE_HELM3" }}
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: "./scripts/create-namespace.sh"
+        args: ["{{ .namespace }}"]
+{{- end }}
 {{- end }}
   - name: {{ .name }}
     namespace: {{ .namespace }}
     chart: {{ .chart }}
-    version: "{{ .version }}"
+    version: "{{ . | getOrNil "version" }}"
     values:
     {{- range .values }}
       - {{ . }}
     {{- end }}
+    secrets:
+    {{- range . | getOrNil "secrets" }}
+      - {{ . }}
+    {{- end }}
+## If using helm3 make sure namespaces exist
+{{- if env "HELMFILE_HELM3" }}
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: "./scripts/create-namespace.sh"
+        args: ["{{ .namespace }}"]
+      - events: ["cleanup"]
+        command: "kubectl"
+        args: ["delete", "ns", "{{ .namespace }}"]
 {{- end }}
+  {{- end }}
 {{- end }}

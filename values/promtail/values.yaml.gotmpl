@@ -1,7 +1,7 @@
 loki:
   serviceName: loki
 
-{{- if env "PKS" }}
+{{- if eq (default (env "CLUSTER_TYPE") "") "pks" }}
 volumes:
   - name: docker
     hostPath:

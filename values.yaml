@@ -8,35 +8,32 @@ clusterSystem:
     - values/cluster-system/extras.yaml.gotmpl
 
 ingress:
-  enabled: true
+  enabled: false
   name: ingress
   namespace: cluster-system
   chart: stable/nginx-ingress
-  version: 1.27.0
+  version: 1.6.17
   values:
     - values/cluster-system/ingress.yaml.gotmpl
 
 certManager:
-  enabled: true
+  enabled: false
   repository:
     name: jetstack
     url: https://charts.jetstack.io
   name: cert-manager
   namespace: cluster-system
   chart: jetstack/cert-manager
-  version: v0.11.0
+  version: v0.13.0
   values:
     - values/cluster-system/cert-manager.yaml.gotmpl
 
 externalDNS:
-  enabled: true
-  repository:
-    name: bitnami
-    url: https://charts.bitnami.com/bitnami
+  enabled: false
   name: external-dns
   namespace: cluster-system
-  version: 2.13.1
-  chart: bitnami/external-dns
+  version: 2.6.4
+  chart: stable/external-dns
   values:
     - values/cluster-system/external-dns.yaml.gotmpl
 
@@ -50,26 +47,22 @@ spinnaker:
   chart: stable/spinnaker
   values:
     - values/spinnaker/values.yaml.gotmpl
-    - values/spinnaker/uaa.yaml.gotmpl
   raw:
     - values/spinnaker/secrets.yaml.gotmpl
 
 concourse:
   enabled: true
-  repository:
-    name: concourse
-    url: https://concourse-charts.storage.googleapis.com
   name: concourse
   namespace: concourse
-  chart: concourse/concourse
-  version: 8.4.1
+  chart: stable/concourse
+  version: 6.2.2
   values:
     - values/concourse/values.yaml.gotmpl
 
 ## Artifact Storage
 
 minio:
-  enabled: false
+  enabled: true
   repository:
     name: bitnami
     url: https://charts.bitnami.com/bitnami
@@ -100,7 +93,7 @@ grafana:
   name: grafana
   namespace: metrics
   chart: stable/grafana
-  version: 3.3.10
+  version: 4.4.0
   values:
     - values/grafana/values.yaml.gotmpl
 
@@ -142,7 +135,7 @@ promtail:
     - values/promtail/values.yaml.gotmpl
 
 elasticsearch:
-  enabled: true
+  enabled: false
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -156,7 +149,7 @@ elasticsearch:
     - values/elasticsearch/secrets.yaml.gotmpl
 
 kibana:
-  enabled: true
+  enabled: false
   repository:
     url: https://helm.elastic.co
     name: elastic
@@ -166,9 +159,8 @@ kibana:
   version: 7.4.1
   values:
     - values/kibana/values.yaml.gotmpl
-
 fluentbit:
-  enabled: true
+  enabled: false
   name: fluentbit
   namespace: logging
   chart: stable/fluent-bit
