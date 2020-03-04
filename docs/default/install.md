@@ -31,7 +31,7 @@ vm-b451253c-e485-4d99-7bb4-1cfe222bf4ac   Ready    <none>   39m   v1.13.5
 
 ## Prepare Helm
 
-Download and Install [Helm 2](https://github.com/helm/helm/releases/tag/v2.15.2).
+### Helm 2
 
 Install the helm diff and tillerless plugins:
 
@@ -43,6 +43,12 @@ helm plugin install https://github.com/databus23/helm-diff
 helm plugin install https://github.com/rimusz/helm-tiller
 
 helm tiller install
+```
+
+### Helm 3
+
+```bash
+helm plugin install https://github.com/databus23/helm-diff
 ```
 
 
@@ -58,6 +64,14 @@ If you're using PKS make sure you set the env variable `PKS=true`. This will hel
 
 ```bash
 . ./envs/default/envs.sh
+```
+
+## Create namespaces
+
+> Note: If you're using helm2 you can skip this step
+
+```bash
+scripts/check-namespaces.sh -c
 ```
 
 ## Install using helmfile

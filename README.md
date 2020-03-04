@@ -12,7 +12,7 @@ For the most part you should just need to edit `envs/default/envs.sh` and fill i
 
 ## Prerequisites
 
-> Note: helmfile uses helm2 in tillerless mode, if you have helm3 installed, download helm2 elsewhere and run helmfile with `--helm-binary=/path/to/helm2`
+> Note: helmfile can use helm2 in tillerless mode, or helm3. Either way, there is no need to run tiller in your cluster.
 
 It's expected that you already have the basic Kubernetes client tools like `kubectl` installed.
 
@@ -22,14 +22,14 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helmdiff](https://github.com/databus23/helm-diff#install)
 * [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
-A happy script (replace bits below with helm2 binary path if needed):
+A happy script:
 
 ```bash
 #!/bin/bash
-helm init --client-only
+helm init --client-only || echo "probably helm3"
 helm plugin install https://github.com/databus23/helm-diff
 helm plugin install https://github.com/rimusz/helm-tiller
-wget -O ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.95.0/helmfile_linux_amd64
+wget -O ~/bin/helmfile https://github.com/roboll/helmfile/releases/download/v0.102.0/helmfile_linux_amd64
 chmod +x ~/bin/helmfile
 ```
 
