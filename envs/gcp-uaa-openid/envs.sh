@@ -134,3 +134,25 @@ export KIBANA_URL=https://${KIBANA_DNS}
 ## Minio
 export MINIO_ACCESS_KEY=
 export MINIO_SECRET_KEY=
+
+## kubeapps
+# hostname to register in DNS
+export KUBEAPPS_DNS=kubeapps.${EXTERNAL_DNS_DOMAIN}
+# external url for kubeapps
+export KUBEAPPS_URL=https://${KUBEAPPS_DNS}
+# base64 cookie secret for when using auth proxy
+## use `python -c 'import os,base64; print base64.urlsafe_b64encode(os.urandom(16))'`
+export KUBEAPPS_COOKIE_SECRET="not-good-secret"
+# mongodb password
+export KUBEAPPS_MONGODB_PASSWORD="bad-password"
+export KUBEAPPS_MONGODB_ROOT_PASSWORD="bad-root-password"
+## kubeapps UAA/OIDC support
+# client id and secret for kubeapps to auth against UAA
+export KUBEAPPS_OIDC_CLIENT_ID=
+export KUBEAPPS_OIDC_CLIENT_SECRET=
+export KUBEAPPS_OIDC_URL="${UAA_URL}"
+
+## wavefront
+export WAVEFRONT_URL="https://<your>.wavefront.com/"
+export WAVEFRONT_TOKEN="<YOUR API TOKEN>"
+export WAVEFRONT_CLUSTER_NAME="${ENV_NAME}"

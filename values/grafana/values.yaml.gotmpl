@@ -16,6 +16,7 @@ ingress:
     cert-manager.io/acme-challenge-type: 'dns01'
     cert-manager.io/acme-dns01-provider: 'prod-clouddns'
     kubernetes.io/tls-acme: 'true'
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "64k"
 {{- end }}
 
 adminPassword: {{ requiredEnv "GRAFANA_ADMIN_PASSWORD" }}

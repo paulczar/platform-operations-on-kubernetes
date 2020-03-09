@@ -1,0 +1,12 @@
+authProxy:
+  enabled: true
+  provider: oidc
+  clientID: "{{ requiredEnv "KUBEAPPS_OIDC_CLIENT_ID" }}"
+  clientSecret: ""
+  cookieSecret: "{{ requiredEnv "KUBEAPPS_COOKIE_SECRET" | b64enc }}"
+  additionalFlags:
+    - "--cookie-secure=true"
+    - "--cookie-httponly=false"
+    - "-oidc-issuer-url={{ requiredEnv "KUBEAPPS_OIDC_URL"}}/oauth/token"
+    - "-redirect-url={{ env "KUBEAPPS_URL" }}/oauth2/callback"
+    - "--insecure-oidc-allow-unverified-email"

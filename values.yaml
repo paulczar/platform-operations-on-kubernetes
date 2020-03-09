@@ -176,7 +176,20 @@ kubeapps:
     name: bitnami
   name: kubeapps
   namespace: kubeapps
-  chart: bitnami/kubeapps
-  version: 3.2.0
+  chart: kubeapps/kubeapps
+  version: 3.4.3
   values:
     - values/kubeapps/values.yaml.gotmpl
+
+# wavefront
+wavefront:
+  enabled: false
+  repository:
+    url: https://wavefronthq.github.io/helm/
+    name: wavefront
+  chart: wavefront/wavefront
+  name: wavefront
+  namespace: wavefront
+  version: 1.1.6
+  values:
+    - values/wavefront/values.yaml.gotmpl

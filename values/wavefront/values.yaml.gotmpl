@@ -1,0 +1,5 @@
+wavefront:
+  url: {{ requiredEnv "WAVEFRONT_URL" }}
+  token: {{ requiredEnv "WAVEFRONT_TOKEN" }}
+
+clusterName: {{ requiredEnv "WAVEFRONT_CLUSTER_NAME" }}
