@@ -53,5 +53,7 @@ secrets:
   oidcCaCert: |
     {{- env "UAA_ROOT_CA_CERT" | nindent 12 }}
   {{- end }}
+  {{- if eq (env "AUTH_TYPE") "uaa" }}
   oidcClientId: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_ID" }}
   oidcClientSecret: {{ requiredEnv "CONCOURSE_OIDC_CLIENT_SECRET" }}
+  {{- end }}

@@ -11,6 +11,9 @@ ingress:
   enabled: false
   name: ingress
   namespace: cluster-system
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   chart: stable/nginx-ingress
   version: 1.6.17
   values:
@@ -31,6 +34,9 @@ certManager:
 externalDNS:
   enabled: false
   name: external-dns
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   namespace: cluster-system
   version: 2.6.4
   chart: stable/external-dns
@@ -40,6 +46,9 @@ externalDNS:
 ## CI/CD
 spinnaker:
   enabled: true
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   name: spinnaker
   namespace: spinnaker
   timeout: 600
@@ -52,6 +61,9 @@ spinnaker:
 
 concourse:
   enabled: true
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   name: concourse
   namespace: concourse
   chart: stable/concourse
@@ -90,6 +102,9 @@ harbor:
 ## Metrics
 grafana:
   enabled: true
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   name: grafana
   namespace: metrics
   chart: stable/grafana
@@ -99,6 +114,9 @@ grafana:
 
 prometheus:
   enabled: true
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   name: prometheus
   namespace: metrics
   chart: stable/prometheus
@@ -159,8 +177,12 @@ kibana:
   version: 7.4.1
   values:
     - values/kibana/values.yaml.gotmpl
+
 fluentbit:
   enabled: false
+  repository:
+    name: stable
+    url: https://kubernetes-charts.storage.googleapis.com
   name: fluentbit
   namespace: logging
   chart: stable/fluent-bit
@@ -170,13 +192,13 @@ fluentbit:
 
 # misc
 kubeapps:
-  enabled: false
+  enabled: true
   repository:
     url: https://charts.bitnami.com/bitnami
     name: bitnami
   name: kubeapps
   namespace: kubeapps
-  chart: kubeapps/kubeapps
+  chart: bitnami/kubeapps
   version: 3.4.3
   values:
     - values/kubeapps/values.yaml.gotmpl
