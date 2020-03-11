@@ -77,7 +77,7 @@ scripts/check-namespaces.sh -c
 ## Install using helmfile
 
 ```bash
-helmfile --state-values-file $ENV_DIR/values.yaml diff
+helmfile apply
 ```
 
 ## Check services

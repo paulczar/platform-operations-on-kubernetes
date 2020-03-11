@@ -245,7 +245,7 @@ uaac client add "${GRAFANA_OIDC_CLIENT_ID}" \
 ## Install using helmfile
 
 ```bash
-helmfile --state-values-file $ENV_DIR/values.yaml.gotmpl apply
+helmfile apply
 ```
 
 ## Check services
