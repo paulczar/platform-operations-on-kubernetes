@@ -6,7 +6,7 @@ if ! yq --version 2>/dev/null >/dev/null; then
   exit 1
 fi
 
-while getopts "hcd" arg; do
+while getopts "hcdx" arg; do
   case $arg in
     h)
       echo "usage check-namespaces.sh [options]"
@@ -20,10 +20,18 @@ while getopts "hcd" arg; do
     d)
       DEBUG=true
       ;;
+    x)
+      DELETE_NS=true
+      ;;
   esac
 done
 
-MERGE="m ${ENV_DIR}/values.yaml.gotmpl values.yaml"
+if [[ -n ${CREATE_NS} && -n ${DELETE_NS} ]]; then
+  echo "-c and -x are exclusive"
+  exit 1
+fi
+
+MERGE="m ${ENV_DIR}/charts.yaml.gotmpl charts.yaml"
 KEYS='r - --printMode p "*"'
 
 [[ -n $DEBUG ]] && echo "==> Calculating list of releases"
@@ -41,11 +49,18 @@ for release in $RELEASES; do
         [[ -n $DEBUG ]] && echo "----> creating namespace $NS"
         kubectl create namespace ${NS}
         sleep 5
-      else
-        [[ -n $DEBUG ]] && echo "----> namespace $NS is exists"
+        continue
       fi
+    elif [[ ${DELETE_NS} == "true" ]]; then
+      [[ -n $DEBUG ]] && echo "----> deleting namespace $NS"
+      kubectl delete namespace ${NS}
+      sleep 5
+      continue
     fi
   else
     [[ -n $DEBUG ]] && echo "----> release $release is disabled"
+    continue
   fi
+          [[ -n $DEBUG ]] && echo "----> namespace $NS exists"
+
 done

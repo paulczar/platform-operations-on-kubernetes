@@ -1,17 +1,4 @@
 manifests:
-  - name: extra-config
-    apiVersion: v1
-    kind: ConfigMap
-    body:
-{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
-  - name: google-credentials
-    apiVersion: v1
-    kind: Secret
-    body:
-      data:
-        credentials.json: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
-{{- end }}
-{{- if .Values.certManager.enabled }}
   - name: letsencrypt-prod
     apiVersion: cert-manager.io/v1alpha2
     kind: ClusterIssuer
@@ -28,4 +15,3 @@ manifests:
               serviceAccountSecretRef:
                 name: google-credentials
                 key: "credentials.json"
-{{- end }}

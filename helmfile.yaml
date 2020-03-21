@@ -2,23 +2,26 @@ helmDefaults:
   timeout: 600
   recreatePods: false
   tillerless: true
+  force: true
 
 environments:
   default:
     values:
-    - values.yaml
-    - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
+      - ./charts.yaml
+      - ./values.yaml
+      - {{ requiredEnv "ENV_DIR" }}/charts.yaml.gotmpl
+      - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
 
 repositories:
-{{- range .Values }}
-{{- if and (.enabled) (hasKey . "repository") }}
+{{- range .Values.charts }}
+{{- if and .enabled (hasKey . "repository") }}
   - name: {{ .repository.name }}
     url: {{ .repository.url }}
 {{- end }}
 {{- end }}
 
 releases:
-{{- range .Values }}
+{{- range .Values.charts }}
 {{- if .enabled }}
 {{- if hasKey . "raw" }}
   - name: {{ .name }}-raw

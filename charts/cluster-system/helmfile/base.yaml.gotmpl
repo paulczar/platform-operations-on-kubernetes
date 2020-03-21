@@ -1,0 +1,13 @@
+manifests:
+  - name: extra-config
+    apiVersion: v1
+    kind: ConfigMap
+    body:
+{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
+  - name: google-credentials
+    apiVersion: v1
+    kind: Secret
+    body:
+      data:
+        credentials.json: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
+{{- end }}

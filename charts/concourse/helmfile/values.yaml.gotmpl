@@ -33,7 +33,7 @@ web:
   service:
     type: ClusterIP
   ingress:
-    enabled: {{ .Values.ingress.enabled }}
+    enabled: {{ .Values._.ingress.enabled }}
     hosts: [{{ env "CONCOURSE_DNS" }}]
     tls:
       - secretName: concourse-tls
