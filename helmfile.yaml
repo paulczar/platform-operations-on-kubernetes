@@ -26,7 +26,7 @@ releases:
 {{- if hasKey . "raw" }}
   - name: {{ .name }}-raw
     namespace: {{ .namespace }}
-    chart: ./charts/mystique
+    chart: ./charts/raw
     values:
     {{- range .raw }}
       - {{ . }}
