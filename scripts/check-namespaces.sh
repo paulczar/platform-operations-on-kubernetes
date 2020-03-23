@@ -26,23 +26,25 @@ while getopts "hcdx" arg; do
   esac
 done
 
+# [[ -n $DEBUG ]] && set -x
+
 if [[ -n ${CREATE_NS} && -n ${DELETE_NS} ]]; then
   echo "-c and -x are exclusive"
   exit 1
 fi
 
 MERGE="m ${ENV_DIR}/charts.yaml.gotmpl charts.yaml"
-KEYS='r - --printMode p "*"'
 
 [[ -n $DEBUG ]] && echo "==> Calculating list of releases"
-RELEASES=$(yq ${MERGE} | yq $KEYS)
+RELEASES=$(yq ${MERGE} | yq r - --printMode p "charts.*" | sed 's/^charts\.//')
 
+[[ -n $DEBUG ]] && echo "----> releases: `echo $RELEASES | xargs`"
 for release in $RELEASES; do
   [[ -n $DEBUG ]] && echo "==> Checking release $release"
-  ENABLED=$(yq ${MERGE} | yq r - "${release}.enabled")
+  ENABLED=$(yq ${MERGE} | yq r - "charts.${release}.enabled")
   if [[ "${ENABLED}" =~ ^(true|yes|1|TRUE|YES)$ ]]; then
     [[ -n $DEBUG ]] && echo "----> release $release is enabled"
-    NS=$(yq ${MERGE} | yq r - "${release}.namespace")
+    NS=$(yq ${MERGE} | yq r - "charts.${release}.namespace")
     if ! kubectl get namespace ${NS} 2>/dev/null >/dev/null; then
       [[ -n $DEBUG ]] && echo "----> namespace $NS is missing"
       if [[ ${CREATE_NS} == "true" ]]; then
