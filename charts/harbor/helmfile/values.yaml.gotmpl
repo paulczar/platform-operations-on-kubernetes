@@ -2,7 +2,7 @@ nameOverride: harbor
 fullnameOverride: harbor
 
 expose:
-{{- if .Values.ingress.enabled }}
+{{- if .Values._.ingress.enabled }}
   type: ingress
   tls:
     enabled: true

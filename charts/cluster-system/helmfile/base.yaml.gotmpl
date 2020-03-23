@@ -1,13 +1,13 @@
 manifests:
-  - name: loki-extra-config
+  - name: extra-config
     apiVersion: v1
     kind: ConfigMap
     body:
 {{- if eq (env "CLOUD_PROVIDER") "gcp" }}
-  - name: loki-secrets
+  - name: google-credentials
     apiVersion: v1
     kind: Secret
     body:
       data:
-        gcs-key.json: {{ env "LOKI_GCS_CREDENTIALS" }}
+        credentials.json: {{ requiredEnv "GOOGLE_APPLICATION_CREDENTIALS_SECRET" }}
 {{- end }}

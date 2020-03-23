@@ -1,0 +1,59 @@
+charts:
+  clusterSystem:
+    enabled: true
+
+  ingress:
+    enabled: true
+
+  certManager:
+    enabled: true
+
+  externalDNS:
+    enabled: true
+
+  ## CI/CD
+  spinnaker:
+    enabled: true
+    values:
+      - charts/spinnaker/helmfile/values.yaml.gotmpl
+      - charts/spinnaker/helmfile/uaa.yaml.gotmpl
+    raw:
+      - charts/spinnaker/helmfile/secrets.yaml.gotmpl
+
+  concourse:
+    enabled: true
+
+  ## Artifact Storage
+
+  harbor:
+    enabled: true
+
+  ## Metrics
+  grafana:
+    enabled: true
+
+  prometheus:
+    enabled: true
+
+  ## Logging
+  loki:
+    enabled: true
+
+  promtail:
+    enabled: true
+
+  elasticsearch:
+    enabled: false
+
+  kibana:
+    enabled: false
+
+  fluentbit:
+    enabled: false
+
+  # misc
+  kubeapps:
+    enabled: false
+
+  minio:
+    enabled: false

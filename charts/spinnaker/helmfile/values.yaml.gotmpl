@@ -33,7 +33,7 @@ halyard:
   image:
     tag: 1.28.0
 
-  {{- if .Values.ingress.enabled }}
+  {{- if .Values._.ingress.enabled }}
   additionalProfileConfigMaps:
     create: true
     data:
@@ -63,7 +63,7 @@ s3:
     - "--path-style-access true"
 {{- end }}
 
-{{- if .Values.ingress.enabled }}
+{{- if .Values._.ingress.enabled }}
 ingress:
   enabled: true
   host: {{ requiredEnv "SPINNAKER_DNS" }}

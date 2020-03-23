@@ -115,26 +115,6 @@ export LOKI_GCS_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_SECRET}
 export LOKI_GCS_PROJECT=${GOOGLE_PROJECT_ID}
 export LOKI_GCS_BUCKET=${ENV_NAME}-loki
 
-## Elasticsearch
-export ELASTICSEARCH_USERNAME=elastic
-export ELASTICSEARCH_PASSWORD=change-this-password
-## Elasticsearch OAuth/UAA/OpenID
-export ELASTICSEARCH_OIDC_CLIENT_ID=elasticsearch
-export ELASTICSEARCH_OIDC_CLIENT_SECRET=a-bad-client-secret
-export ELASTICSEARCH_OIDC_AUTH_URL=${UAA_URL}/oauth/authorize
-export ELASTICSEARCH_OIDC_TOKEN_URL=${UAA_URL}/oauth/token
-export ELASTICSEARCH_OIDC_USERINFO_URL=${UAA_URL}/userinfo
-export ELASTICSEARCH_OIDC_LOGOUT_URL=${UAA_URL}/userinfo
-export ELASTICSEARCH_OIDC_JWKS_URL=${UAA_URL}/token_keys
-
-## Kibana
-export KIBANA_DNS=kibana.${EXTERNAL_DNS_DOMAIN}
-export KIBANA_URL=https://${KIBANA_DNS}
-
-## Minio
-export MINIO_ACCESS_KEY=
-export MINIO_SECRET_KEY=
-
 ## kubeapps
 # hostname to register in DNS
 export KUBEAPPS_DNS=kubeapps.${EXTERNAL_DNS_DOMAIN}
@@ -156,3 +136,24 @@ export KUBEAPPS_OIDC_URL="${UAA_URL}"
 export WAVEFRONT_URL="https://<your>.wavefront.com/"
 export WAVEFRONT_TOKEN="<YOUR API TOKEN>"
 export WAVEFRONT_CLUSTER_NAME="${ENV_NAME}"
+
+# Disabled stuff
+# ## Elasticsearch
+# export ELASTICSEARCH_USERNAME=elastic
+# export ELASTICSEARCH_PASSWORD=change-this-password
+# ## Elasticsearch OAuth/UAA/OpenID
+# export ELASTICSEARCH_OIDC_CLIENT_ID=elasticsearch
+# export ELASTICSEARCH_OIDC_CLIENT_SECRET=a-bad-client-secret
+# export ELASTICSEARCH_OIDC_AUTH_URL=${UAA_URL}/oauth/authorize
+# export ELASTICSEARCH_OIDC_TOKEN_URL=${UAA_URL}/oauth/token
+# export ELASTICSEARCH_OIDC_USERINFO_URL=${UAA_URL}/userinfo
+# export ELASTICSEARCH_OIDC_LOGOUT_URL=${UAA_URL}/userinfo
+# export ELASTICSEARCH_OIDC_JWKS_URL=${UAA_URL}/token_keys
+
+# ## Kibana
+# export KIBANA_DNS=kibana.${EXTERNAL_DNS_DOMAIN}
+# export KIBANA_URL=https://${KIBANA_DNS}
+
+# ## Minio
+# export MINIO_ACCESS_KEY=
+# export MINIO_SECRET_KEY=

@@ -1,7 +1,7 @@
 persistence:
   enabled: true
 
-{{- if .Values.ingress.enabled }}
+{{- if .Values._.ingress.enabled }}
 ingress:
   enabled: true
   hosts: [{{ env "GRAFANA_DNS" }}]
@@ -42,13 +42,13 @@ datasources:
    datasources:
    - name: {{ env "ENV_NAME" }}-prometheus
      type: prometheus
-     url: http://prometheus-server.{{ .Values.prometheus.namespace }}
+     url: http://prometheus-server.{{ .Values.charts.prometheus.namespace }}
      access: proxy
      isDefault: true
-{{- if .Values.loki.enabled }}
+{{- if .Values.charts.loki.enabled }}
    - name: {{ env "ENV_NAME" }}-loki
      type: loki
-     url: http://loki.{{ .Values.loki.namespace }}:3100
+     url: http://loki.{{ .Values.charts.loki.namespace }}:3100
      access: proxy
 {{- end }}
 dashboardProviders:

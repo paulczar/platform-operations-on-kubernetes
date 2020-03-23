@@ -1,10 +1,10 @@
 useHelm3: {{ env "IS_HELM3" | default false }}
 
-{{- if .Values.ingress.enabled }}
+{{- if .Values._.ingress.enabled }}
 ingress:
   enabled: true
   hostname: {{ env "KUBEAPPS_DNS" | default "kubeapps.local" }}
-{{- if .Values.certManager.enabled }}
+{{- if .Values.charts.certManager.enabled }}
   tls: true
   annotations:
     nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"

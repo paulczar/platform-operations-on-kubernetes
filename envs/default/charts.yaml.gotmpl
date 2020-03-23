@@ -1,0 +1,46 @@
+charts:
+  ## Cluster Operations
+  clusterSystem:
+    enabled: true
+
+  ingress:
+    enabled: false
+
+  certManager:
+    enabled: false
+
+  externalDNS:
+    enabled: false
+
+  ## CI/CD
+  spinnaker:
+    enabled: true
+
+  concourse:
+    enabled: false
+
+  ## Artifact Storage
+
+  minio:
+    enabled: true
+
+  harbor:
+    enabled: true
+
+  ## Metrics
+  grafana:
+    enabled: true
+
+  prometheus:
+    enabled: true
+
+  ## Logging
+  ## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
+  loki:
+    enabled: true
+
+  promtail:
+    enabled: true
+
+  kubeapps:
+    enabled: true
