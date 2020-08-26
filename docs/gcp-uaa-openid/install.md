@@ -1,5 +1,7 @@
 # Platform Operations on Kubernetes on GCP with UAA / OpenID auth
 
+*THIS IS DEPRECATED. STAY TUNED FOR OAUTH2 w/ KEYCLOAK*
+
 This example demonstrates running on a cluster running inside of Google Cloud with access to a UAA server for authentication for all services. It should work with most openid providers with minimal change.
 
 With OpenID auth in place all services will be made available to the public internet via an nginx ingress controller and secured with `cert-manager` and `external-dns`. These will be installed into a `cluster-admin` namespace.
@@ -9,9 +11,7 @@ The following components are installed in the default environment:
 * Grafana
 * Prometheus
 * Loki / Promtail
-* Concourse
 * Harbor
-* Spinnaker
 
 ## Prepare GCP resources account
 

@@ -1,18 +1,30 @@
+{{- if or (ne .Values._.cloudProvider "none") .Values._.ingress.enabled  }}
 manifests:
   - metadata:
-      name: letsencrypt-prod
+      name: letsencrypt
     apiVersion: cert-manager.io/v1alpha2
     kind: ClusterIssuer
     spec:
       acme:
-        server: https://acme-v02.api.letsencrypt.org/directory
+        server: {{ env "CERT_MANAGER_ACME_SERVER" | default "https://acme-staging-v02.api.letsencrypt.org/directory" }}
         email: {{ requiredEnv "CERT_MANAGER_EMAIL" }}
         privateKeySecretRef:
-          name: letsencrypt-prod
+          name: letsencrypt
         solvers:
-        - dns01:
-            clouddns:
-              project: {{ requiredEnv "GOOGLE_PROJECT_ID" }}
-              serviceAccountSecretRef:
-                name: google-credentials
-                key: "credentials.json"
+{{- if and ( not .Values._.ingress.enabled ) ( env "GOOGLE_PROJECT_ID" | default false )  }}
+          - dns01:
+              clouddns:
+                project: {{ env "GOOGLE_PROJECT_ID" }}
+                serviceAccountSecretRef:
+                  name: google-credentials
+                  key: "credentials.json"
+{{- else if .Values._.ingress.enabled }}
+          - http01:
+              ingress:
+                class: nginx
+{{- else }}
+          - http01:
+{{- end }}
+{{- else }}
+manifests: []
+{{- end }}

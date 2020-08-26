@@ -1,32 +1,28 @@
 nameOverride: harbor
 fullnameOverride: harbor
 
-expose:
+service:
+  type: ClusterIP
 {{- if .Values._.ingress.enabled }}
-  type: ingress
   tls:
     enabled: true
-    secretName: harbor-certs
-    notarySecretName: "notary-secret"
-  ingress:
-    hosts:
-      core: {{ requiredEnv "HARBOR_DNS" }}
-      notary: {{ env "HARBOR_DNS" }}
-    annotations:
-      ingress.kubernetes.io/ssl-redirect: 'true'
-      ingress.kubernetes.io/proxy-body-size: '0'
-      kubernetes.io/ingress.class: nginx
-      certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-      certmanager.k8s.io/acme-challenge-type: dns01
-      certmanager.k8s.io/acme-dns01-provider: prod-clouddns
-      kubernetes.io/tls-acme: 'true'
+    existingSecret: harbor-tls
+    notaryExistingSecret: notary-tls
+ingress:
+  enabled: true
+  hosts:
+    core: {{ requiredEnv "HARBOR_DNS" }}
+    notary: {{ env "HARBOR_DNS" }}
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    ingress.kubernetes.io/proxy-body-size: '0'
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: 'true'
 externalURL: https://{{ env "HARBOR_DNS" }}
 {{- else }}
-  type: clusterIP
   tls:
     enabled: true
     commonName: harbor
-    secretName: harbor-certs
 
 externalURL: https://harbor:8443
 {{- end }}
@@ -40,20 +36,24 @@ persistence:
     redis:
       size: 10Gi
   imageChartStorage:
-{{- if not (env "CLOUD_PROVIDER") }}
+{{- if or (eq (env "CLOUD_PROVIDER") "aws") (not (env "CLOUD_PROVIDER")) }}
     disableredirect: true
     type: s3
     s3:
-      accesskey: {{ requiredEnv "MINIO_ACCESS_KEY" }}
-      secretkey: {{ requiredEnv "MINIO_SECRET_KEY" }}
+      accesskey: {{ env "HARBOR_S3_ACCESS_KEY" | default (env "MINIO_ACCESS_KEY") }}
+      secretkey: {{ env "HARBOR_S3_SECRET_KEY" | default (env "MINIO_SECRET_KEY") }}
+      {{- if not (env "CLOUD_PROVIDER") }}
       regionendpoint: http://minio.minio.svc.cluster.local:9000
-      bucket: harbor
+      {{- else if (env "HARBOR_S3_REGION") }}
+      region: {{ env "HARBOR_S3_REGION" }}
+      {{- end }}
+      bucket: {{ env "HARBOR_IMAGE_STORAGE_BUCKET" | default "harbor" }}
 {{- else if eq (env "CLOUD_PROVIDER") "gcp" }}
     disableredirect: false
     type: gcs
     gcs:
-      bucket: {{ requiredEnv "ENV_NAME" }}-harbor
-      encodedkey: {{ env "HARBOR_GCP_CREDENTIALS" }}
+      bucket: {{ requiredEnv "HARBOR_IMAGE_STORAGE_BUCKET" }}
+      encodedkey: {{ requiredEnv "HARBOR_GCP_CREDENTIALS" }}
 {{- end }}
 
 harborAdminPassword: {{ requiredEnv "HARBOR_ADMIN_PASSWORD" }}
@@ -65,23 +65,26 @@ database:
   internal:
     password: {{ requiredEnv "HARBOR_DATABASE_PASSWORD" }}
 
-{{- if and (eq (env "AUTH_TYPE") "uaa") (env "UAA_ROOT_CA_CERT") }}
-uaaSecretName: uaa-ca-cert
-{{- end }}
-
 userSettings:
   self_registration: "false"
-{{- if eq (env "AUTH_TYPE") "uaa" }}
-  auth_mode: uaa_auth
-  uaa_client_id: {{ requiredEnv "HARBOR_OIDC_CLIENT_ID" }}
-  uaa_client_secret: {{ requiredEnv "HARBOR_OIDC_CLIENT_SECRET" }}
-  uaa_endpoint: {{ requiredEnv "UAA_URL" }}
+{{- if eq (env "AUTH_TYPE") "oidc" }}
+  auth_mode: oidc_auth
+  oidc_client_id: {{ requiredEnv "HARBOR_OIDC_CLIENT_ID" }}
+  oidc_client_secret: {{ requiredEnv "HARBOR_OIDC_CLIENT_SECRET" }}
+  oidc_endpoint: {{ requiredEnv "HARBOR_OIDC_URL" }}
 {{- end }}
+
 core:
   secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
-  {{- if env "HARBOR_XSRFKEY" }}
-  xsrfKey: {{ env "HARBOR_XSRFKEY" }}
+  secretKey: {{ requiredEnv "HARBOR_CORE_SECRET_KEY" }}
+  {{- if env "HARBOR_CSRFKEY" }}
+  csrfKey: {{ env "HARBOR_CSRFKEY" }}
   {{- end }}
+
+{{- if env "ROOT_CA_BUNDLE" }}
+caBundleSecretName: root-ca-bundle
+{{- end }}
+
 jobservice:
   secret: {{ requiredEnv "HARBOR_INTERNAL_SECRET" }}
 registry:

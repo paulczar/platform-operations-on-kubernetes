@@ -34,6 +34,7 @@ export EXTERNAL_DNS_DOMAIN=
 
 ## cert-manager
 export CERT_MANAGER_EMAIL=
+export CERT_MANAGER_ACME_SERVER="https://acme-staging-v02.api.letsencrypt.org/directory"
 
 export AUTH_TYPE=uaa
 

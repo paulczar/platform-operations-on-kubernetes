@@ -22,7 +22,10 @@ export AUTH_TYPE= #uaa
 # we can use here.
 export EXTERNAL_DNS_SECRET="google-credentials"
 # DNS domain for external-dns controller to manage
-export EXTERNAL_DNS_DOMAIN="demo.example.com"
+export EXTERNAL_DNS_DOMAIN="localhost"
+
+## cert-manager
+export CERT_MANAGER_ACME_SERVER="https://acme-staging-v02.api.letsencrypt.org/directory"
 
 ## concourse
 # hostname to register in DNS

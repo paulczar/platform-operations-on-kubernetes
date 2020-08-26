@@ -12,9 +12,6 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: 'nginx'
     ingress.kubernetes.io/ssl-redirect: 'true'
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
-    cert-manager.io/acme-challenge-type: 'dns01'
-    cert-manager.io/acme-dns01-provider: 'prod-clouddns'
     kubernetes.io/tls-acme: 'true'
     nginx.ingress.kubernetes.io/proxy-buffer-size: "64k"
 {{- end }}
@@ -22,62 +19,72 @@ ingress:
 adminPassword: {{ requiredEnv "GRAFANA_ADMIN_PASSWORD" }}
 
 grafana.ini:
-  server:
-    root_url: {{ env "GRAFANA_URL" }}
+  [server]
+  root_url = {{ env "GRAFANA_URL" }}
 {{- if eq (env "AUTH_TYPE") "uaa" }}
-  auth.generic_oauth:
-    name: uaa
-    enabled: true
-    scopes: openid profile email
-    client_id: {{ env "GRAFANA_OIDC_CLIENT_ID" }}
-    client_secret: {{ env "GRAFANA_OIDC_CLIENT_SECRET" }}
-    auth_url: {{ env "GRAFANA_OIDC_AUTH_URL" }}
-    token_url: {{ env "GRAFANA_OIDC_TOKEN_URL" }}
-    api_url: {{ env "GRAFANA_OIDC_USERINFO_URL" }}
+  [auth.generic_oauth]
+  name = uaa
+  enabled = true
+  scopes = openid profile email
+  client_id = {{ env "GRAFANA_OIDC_CLIENT_ID" }}
+  client_secret = {{ env "GRAFANA_OIDC_CLIENT_SECRET" }}
+  auth_url = {{ env "GRAFANA_OIDC_AUTH_URL" }}
+  token_url = {{ env "GRAFANA_OIDC_TOKEN_URL" }}
+  api_url = {{ env "GRAFANA_OIDC_USERINFO_URL" }}
 {{- end }}
 
 datasources:
   datasources.yaml:
    apiVersion: 1
    datasources:
-   - name: {{ env "ENV_NAME" }}-prometheus
-     type: prometheus
-     url: http://prometheus-server.{{ .Values.charts.prometheus.namespace }}
-     access: proxy
-     isDefault: true
-{{- if .Values.charts.loki.enabled }}
-   - name: {{ env "ENV_NAME" }}-loki
-     type: loki
-     url: http://loki.{{ .Values.charts.loki.namespace }}:3100
-     access: proxy
-{{- end }}
+    {{- if .Values.charts.prometheus.enabled }}
+    - name: {{ env "ENV_NAME" }}-prometheus
+      type: prometheus
+      url: http://prometheus-server.{{ .Values.charts.prometheus.namespace }}
+      access: proxy
+      isDefault: true
+    {{- end }}
+    {{- if .Values.charts.prometheusOperator.enabled }}
+    - name: {{ env "ENV_NAME" }}-prometheus-operator
+      type: prometheus
+      url: http://prometheus-operator-prometheus.{{ .Values.charts.prometheusOperator.namespace }}:9090
+      access: proxy
+      isDefault: {{ .Values.charts.prometheus.enabled | ternary false true }}
+    {{- end }}
+    {{- if .Values.charts.loki.enabled }}
+    - name: {{ env "ENV_NAME" }}-loki
+      type: loki
+      url: http://loki.{{ .Values.charts.loki.namespace }}:3100
+      access: proxy
+    {{- end }}
+
 dashboardProviders:
  dashboardproviders.yaml:
    apiVersion: 1
    providers:
-   - name: 'default'
-     orgId: 1
-     folder: ''
-     type: file
-     disableDeletion: false
-     editable: true
-     options:
-       path: /var/lib/grafana/dashboards/default
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
 
 dashboards:
   default:
     prometheus-stats:
       gnetId: 2
       revision: 2
-      datasource: {{ env "ENV_NAME" }}-prometheus
+      datasource: default
     pks-stats:
       gnetId: 10000
       revision: 1
-      datasource: {{ env "ENV_NAME" }}-prometheus
+      datasource: default
     spring-jvm-actuator:
       gnetId: 4701
       revision:
-      datasource: {{ env "ENV_NAME" }}-prometheus
+      datasource: default
     loki-promtail:
       gnetId: 10880
-      datasource: {{ env "ENV_NAME" }}-prometheus
+      datasource: default

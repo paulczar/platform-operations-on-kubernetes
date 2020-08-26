@@ -5,10 +5,10 @@ ingressShim:
     requests:
       cpu: 10m
       memory: 32Mi
-  defaultIssuerName: letsencrypt-prod
+  defaultIssuerName: letsencrypt
   defaultIssuerKind: ClusterIssuer
 webhook:
-  enabled: false
+  enabled: true
 resources:
   requests:
     cpu: 10m

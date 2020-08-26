@@ -1,48 +1,84 @@
 helmDefaults:
   timeout: 600
   recreatePods: false
+  force: false
   tillerless: true
-  force: true
+  # args:
+  #   - "--skip-crds"
 
 environments:
   default:
     values:
       - ./charts.yaml
-      - ./values.yaml
+      - ./values.yaml.gotmpl
+      {{- if env "ENV_DIR" }}
       - {{ requiredEnv "ENV_DIR" }}/charts.yaml.gotmpl
       - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
+      {{- end }}
+
+{{- if and (.Values.charts.prometheus.enabled) (.Values.charts.prometheusOperator.enabled) }}
+{{ fail "Cannot enable both prometheus and prometheus operator" }}
+{{- end }}
+
+{{- /* create a unique list of helm repositories */ -}}
+{{- $repositoryList := list -}}
+{{- if hasKey .Values "repositories" -}}
+{{- $myDict := dict "name" "" "url" "" -}}
+{{- range $key, $value := .Values.repositories -}}
+{{- $_ := set $myDict "name" $key -}}
+{{- $_ := set $myDict "url" $value -}}
+{{- $repositoryList = append $repositoryList $myDict -}}
+{{- end -}}
+{{- end -}}
+{{- range .Values.charts -}}
+{{- if and .enabled (hasKey . "repository") -}}
+{{- $repositoryList = append $repositoryList .repository -}}
+{{- end -}}
+{{- end }}
 
 repositories:
+{{ $repositoryList | uniq | toYaml | indent 2 }}
+
+
+releases:
+
+#### CRDs
 {{- range .Values.charts }}
-{{- if and .enabled (hasKey . "repository") }}
-  - name: {{ .repository.name }}
-    url: {{ .repository.url }}
+{{- if .enabled }}
+{{- if hasKey . "crds" }}
+  - name: {{ .name }}-crds
+    chart: {{ .crds }}
+{{- end }}
 {{- end }}
 {{- end }}
 
-releases:
+#### Raw
 {{- range .Values.charts }}
 {{- if .enabled }}
 {{- if hasKey . "raw" }}
-  - name: {{ .name }}-raw
-    namespace: {{ .namespace }}
-    chart: ./charts/raw
-    values:
-    {{- range .raw }}
-      - {{ . }}
-    {{- end }}
+  {{- $chart := . }}
+  {{- $index := 0 }}
+{{- range .raw }}
+  - name: {{ $chart.name }}-raw-{{ $index }}
+    namespace: {{ $chart.namespace }}
+    chart: paulczar/raw
+    version: 1.0.1
+    values: [{{ . }}]
+{{- $index = add $index 1 }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{- range .Values.charts }}
+{{- if .enabled }}
+{{- $_ := unset . "raw" }}
+{{- $_ := unset . "crds" }}
+{{- $_ := unset . "enabled" }}
+{{- $_ := unset . "repository" }}
   - name: {{ .name }}
-    namespace: {{ .namespace }}
-    chart: {{ .chart }}
-    version: "{{ . | getOrNil "version" }}"
-    values:
-    {{- range .values }}
-      - {{ . }}
-    {{- end }}
-    secrets:
-    {{- range . | getOrNil "secrets" }}
-      - {{ . }}
-    {{- end }}
-  {{- end }}
+{{- $_ := unset . "name" }}
+    {{- . | toYaml | nindent 4 }}
+{{- end }}
 {{- end }}

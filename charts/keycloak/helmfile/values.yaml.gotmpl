@@ -1,0 +1,33 @@
+## see https://github.com/codecentric/helm-charts/tree/master/charts/keycloak
+
+fullnameOverride: keycloak
+nameOverride: keycloak
+
+extraEnv: |
+  - name: PROXY_ADDRESS_FORWARDING
+    value: "true"
+
+extraEnvFrom: |
+  - secretRef:
+      name: "keycloak-admin-secret"
+
+{{- if .Values._.ingress.enabled }}
+ingress:
+  enabled: true
+  annotations:
+    {{- if .Values.charts.ingress.enabled }}
+    kubernetes.io/ingress.class: nginx
+    {{- end }}
+    {{- if .Values.charts.certManager.enabled }}
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    kubernetes.io/tls-acme: 'true'
+    {{- end }}
+  rules:
+    - host: {{ requiredEnv "KEYCLOAK_DNS" }}
+      paths: ["/"]
+  {{- if .Values.charts.certManager.enabled }}
+  tls:
+    - secretName: keycloak-tls
+      hosts: ["{{ requiredEnv "KEYCLOAK_DNS" }}"]
+  {{- end }}
+{{- end }}

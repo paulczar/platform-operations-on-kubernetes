@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+  echo "Usage: ./scripts/installCRDs path-to-crds"
+  exit 1
+fi
+
+if [[ ! -d $1 ]]; then
+  echo "$1 path does not exist"
+  exit 1
+fi
+
+echo "Checking CRDs are installed from $1"
+
+for crd in `ls $1/*.yaml`; do
+  if ! kubectl get -f $crd 2>/dev/null >/dev/null; then
+    kubectl apply --validate=false -f $crd 2>/dev/null >/dev/null
+  fi
+done

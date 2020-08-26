@@ -1,5 +1,0 @@
-{{- $template := fromYaml (include "raw.metadata" .) -}}
-{{- range .Values.manifests -}}
----
-{{ toYaml (merge . $template) }}
-{{- end }}

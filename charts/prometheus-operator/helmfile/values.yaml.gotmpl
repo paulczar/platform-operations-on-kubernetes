@@ -1,0 +1,13 @@
+nameOverride: prometheus-operator
+fullnameOverride: prometheus-operator
+
+operator:
+  createCustomResource: false
+
+alertmanager:
+  enabled: false
+
+prometheus:
+  persistence:
+    enabled: true
+    size: 50Gi

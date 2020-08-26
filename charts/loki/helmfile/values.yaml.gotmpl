@@ -33,3 +33,8 @@ env:
   - name: GOOGLE_APPLICATION_CREDENTIALS
     value: "/secrets/gcs-key.json"
 {{- end }}
+
+{{- if .Values.charts.prometheusOperator.enabled }}
+serviceMonitor:
+  enabled: true
+{{- end }}

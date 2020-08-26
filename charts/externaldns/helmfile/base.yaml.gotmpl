@@ -3,10 +3,6 @@ sources:
   - ingress
 rbac:
   create: "true"
-provider: google
-google:
-  project: {{ env "GOOGLE_PROJECT_ID" }}
-  serviceAccountSecret: {{ requiredEnv "EXTERNAL_DNS_SECRET" }}
 domainFilters:
   - {{ requiredEnv "EXTERNAL_DNS_DOMAIN" }}
 resources:
@@ -16,3 +12,9 @@ resources:
   requests:
     memory: 50Mi
     cpu: 10m
+{{- if and (eq .Values._.cloudProvider "gcp") (env "EXTERNAL_DNS_SECRET") }}
+provider: google
+google:
+  project: {{ env "GOOGLE_PROJECT_ID" }}
+  serviceAccountSecret: {{ env "EXTERNAL_DNS_SECRET" }}
+{{- end }}

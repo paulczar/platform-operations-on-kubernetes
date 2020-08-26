@@ -1,3 +1,10 @@
+
+
+## Extra repositories that aren't called out
+## in `charts:` below.
+repositories:
+  paulczar: https://tech.paulcz.net/charts
+
 ## A list of helm charts to be installed
 ## anything in here can be overridden in
 ## `$env_dir/charts.yaml.gotmpl`
@@ -15,25 +22,17 @@
 ## `secrets:` is a list of encrypted secrets
 ## see: https://github.com/roboll/helmfile#secrets
 
-## Cluster Operations
 charts:
-  clusterSystem:
-    name: cluster-system-extras
-    enabled: true
-    namespace: cluster-system
-    chart: ./charts/mystique
-    values:
-      - charts/cluster-system/helmfile/base.yaml.gotmpl
 
   ingress:
     enabled: false
     name: ingress
     namespace: cluster-system
     repository:
-      name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
-    chart: stable/nginx-ingress
-    version: 1.6.17
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
+    chart: bitnami/nginx-ingress-controller
+    version: 5.3.16
     values:
       - charts/ingress/helmfile/base.yaml.gotmpl
 
@@ -43,53 +42,45 @@ charts:
       name: jetstack
       url: https://charts.jetstack.io
     name: cert-manager
-    namespace: cluster-system
+    namespace: cert-manager
     chart: jetstack/cert-manager
-    version: v0.13.0
+    version: v0.16.1
     values:
       - charts/cert-manager/helmfile/base.yaml.gotmpl
     raw:
+      - charts/cert-manager/helmfile/secrets.yaml.gotmpl
       - charts/cert-manager/helmfile/cluster-issuer.yaml.gotmpl
+    # crds: charts/cert-manager/crds
+    hooks:
+      - events: ["presync"]
+        command: "/bin/bash"
+        args: ["-c", "./scripts/installCRDs ./charts/cert-manager/crds"]
 
   externalDNS:
     enabled: false
     name: external-dns
     repository:
-      name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
     namespace: cluster-system
-    version: 2.6.4
-    chart: stable/external-dns
+    version: 3.3.0
+    chart: bitnami/external-dns
     values:
       - charts/externaldns/helmfile/base.yaml.gotmpl
-
-  ## CI/CD
-  spinnaker:
-    enabled: true
-    repository:
-      name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
-    name: spinnaker
-    namespace: spinnaker
-    timeout: 600
-    version: 2.0.0-rc1
-    chart: stable/spinnaker
-    values:
-      - charts/spinnaker/helmfile/values.yaml.gotmpl
     raw:
-      - charts/spinnaker/helmfile/secrets.yaml.gotmpl
+      - charts/externaldns/helmfile/secrets.yaml.gotmpl
 
-  concourse:
+  reloader:
     enabled: true
+    name: reloader
     repository:
-      name: concourse
-      url: https://concourse-charts.storage.googleapis.com
-    name: concourse
-    namespace: concourse
-    chart: stable/concourse
-    version: 8.3.7
+      name: stakater
+      url: https://stakater.github.io/stakater-charts
+    namespace: cluster-system
+    version: v0.0.67
+    chart: stakater/reloader
     values:
-      - charts/concourse/helmfile/values.yaml.gotmpl
+      - charts/reloader/helmfile/base.yaml.gotmpl
 
   ## Artifact Storage
 
@@ -101,19 +92,19 @@ charts:
     name: minio
     namespace: minio
     chart: bitnami/minio
-    version: 2.2.0
+    version: 3.6.0
     values:
       - charts/minio/helmfile/values.yaml.gotmpl
 
   harbor:
     enabled: true
     repository:
-      name: harbor
-      url: https://helm.goharbor.io
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
     name: harbor
     namespace: harbor
-    chart: harbor/harbor
-    version: 1.3.1
+    chart: /home/pczarkowski/development/github/bitnami/charts/bitnami/harbor
+    # version: 7.1.0
     values:
       - charts/harbor/helmfile/values.yaml.gotmpl
     raw:
@@ -123,17 +114,19 @@ charts:
   grafana:
     enabled: true
     repository:
-      name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
     name: grafana
     namespace: metrics
-    chart: stable/grafana
-    version: 5.0.5
+    chart: bitnami/grafana
+    version: 3.3.5
     values:
-      - charts/grafana/helmfile/values.yaml.gotmpl
+      - charts/grafana/helmfile/bitnami-values.yaml.gotmpl
+    raw:
+      - charts/grafana/helmfile/bitnami-raw.yaml.gotmpl
 
   prometheus:
-    enabled: true
+    enabled: false
     repository:
       name: stable
       url: https://kubernetes-charts.storage.googleapis.com
@@ -144,8 +137,25 @@ charts:
     values:
       - charts/prometheus/helmfile/values.yaml.gotmpl
 
-  ## Logging
-  ## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
+  prometheusOperator:
+    enabled: true
+    repository:
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
+    name: prometheus-operator
+    namespace: metrics
+    chart: bitnami/prometheus-operator
+    version: 0.29.4
+    values:
+      - charts/prometheus-operator/helmfile/values.yaml.gotmpl
+    # crds: charts/prometheus-operator/crds
+    hooks:
+      - events: ["presync"]
+        command: "/bin/bash"
+        args: ["-c", "./scripts/installCRDs ./charts/prometheus-operator/crds"]
+
+## Logging
+## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
   loki:
     enabled: true
     repository:
@@ -154,7 +164,7 @@ charts:
     name: loki
     namespace: logging
     chart: loki/loki
-    version: 0.25.1
+    version: 0.31.0
     values:
       - charts/loki/helmfile/values.yaml.gotmpl
     raw:
@@ -168,47 +178,9 @@ charts:
     name: promtail
     namespace: logging
     chart: loki/promtail
-    version: 0.19.2
+    version: 0.24.0
     values:
       - charts/promtail/helmfile/values.yaml.gotmpl
-
-  elasticsearch:
-    enabled: false
-    repository:
-      url: https://helm.elastic.co
-      name: elastic
-    name: elasticsearch
-    namespace: logging
-    chart: elastic/elasticsearch
-    version: 7.4.1
-    values:
-      - charts/elasticsearch/helmfile/values.yaml.gotmpl
-    raw:
-      - charts/elasticsearch/helmfile/secrets.yaml.gotmpl
-
-  kibana:
-    enabled: false
-    repository:
-      url: https://helm.elastic.co
-      name: elastic
-    name: kibana
-    namespace: logging
-    chart: elastic/kibana
-    version: 7.4.1
-    values:
-      - charts/kibana/helmfile/values.yaml.gotmpl
-
-  fluentbit:
-    enabled: false
-    repository:
-      name: stable
-      url: https://kubernetes-charts.storage.googleapis.com
-    name: fluentbit
-    namespace: logging
-    chart: stable/fluent-bit
-    version: 2.7.3
-    values:
-      - charts/fluentbit/helmfile/values.yaml.gotmpl
 
   # misc
   kubeapps:
@@ -235,3 +207,18 @@ charts:
     version: 1.1.6
     values:
       - charts/wavefront/helmfile/values.yaml.gotmpl
+
+  keycloak:
+    enabled: true
+    repository:
+      url: https://codecentric.github.io/helm-charts
+      name: codecentric
+    chart: codecentric/keycloak
+    name: keycloak
+    namespace: keycloak
+    version: 9.0.1
+    values:
+      - charts/keycloak/helmfile/values.yaml.gotmpl
+    raw:
+      - charts/keycloak/helmfile/secrets.yaml.gotmpl
+      - charts/keycloak/helmfile/create-users.yaml.gotmpl

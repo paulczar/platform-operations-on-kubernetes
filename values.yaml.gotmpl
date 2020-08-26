@@ -1,0 +1,41 @@
+## default values to be rendered into helmfile
+## templates go here. They are namespaced under
+## the `_` key to ensure they don't interfere
+## with the values for the actual helm charts.
+
+_:
+  ingress:
+    enabled: false
+
+## cluster has podsecuritypolicy enabled
+  psp:
+    enabled: false
+
+  auth:
+    type: {{ env "AUTH_TYPE" | default "none" }}
+  cloudProvider: {{ env "CLOUD_PROVIDER" | default "none" }}
+
+  keycloak:
+  {{- if (env "KEYCLOAK_USERS_0_USER") }}
+    users:
+    {{- range splitList "," "0,1,2,3,4" }}
+    {{- if env (list "KEYCLOAK" "USERS" . "USER" | join "_") }}
+      - user: {{ env (list "KEYCLOAK" "USERS" . "USER" | join "_") }}
+        pass: {{ env (list "KEYCLOAK" "USERS" . "PASS" | join "_") }}
+        email: {{ env (list "KEYCLOAK" "USERS" . "EMAIL" | join "_") }}
+    {{- end }}
+    {{- end }}
+  {{- else }}
+      users: []
+  {{- end }}
+    clients:
+    {{- if (env "HARBOR_OIDC_CLIENT_ID") }}
+      - name: {{ env "HARBOR_OIDC_CLIENT_ID" }}
+        url: {{ env "HARBOR_URL" }}
+        secret: {{ env "HARBOR_OIDC_CLIENT_SECRET" }}
+    {{- end }}
+    {{- if (env "GRAFANA_OIDC_CLIENT_ID") }}
+      - name: {{ env "GRAFANA_OIDC_CLIENT_ID" }}
+        url: {{ env "GRAFANA_URL" }}
+        secret: {{ env "GRAFANA_OIDC_CLIENT_SECRET" }}
+    {{- end }}

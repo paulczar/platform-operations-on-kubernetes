@@ -20,7 +20,6 @@ It's expected that you already have the basic Kubernetes client tools like `kube
 * [helm](https://helm.sh/docs/using_helm/#quickstart-guide)
 * [helmfile](https://github.com/roboll/helmfile#installation)
 * [helmdiff](https://github.com/databus23/helm-diff#install)
-* [helm tillerless](https://github.com/rimusz/helm-tiller#installation)
 
 A happy script:
 

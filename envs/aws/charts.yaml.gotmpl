@@ -1,18 +1,13 @@
 charts:
-  ## Cluster Operations
-  clusterSystem:
-    enabled: true
 
   ingress:
-    enabled: false
+    enabled: true
 
   certManager:
-    enabled: false
+    enabled: true
 
   externalDNS:
     enabled: false
-
-  ## Artifact Storage
 
   minio:
     enabled: true
@@ -20,15 +15,16 @@ charts:
   harbor:
     enabled: true
 
-  ## Metrics
   grafana:
     enabled: true
+
+  prometheus:
+    enabled: false
 
   prometheusOperator:
     enabled: true
 
   ## Logging
-  ## Generally speaking you'll only enable one set of either Loki+Promtail, or ELK
   loki:
     enabled: true
 

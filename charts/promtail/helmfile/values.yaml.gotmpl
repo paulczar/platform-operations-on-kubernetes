@@ -46,3 +46,8 @@ volumeMounts:
   mountPath: /var/log/pods
   readOnly: true
 {{- end }}
+
+{{- if .Values.charts.prometheusOperator.enabled }}
+serviceMonitor:
+  enabled: true
+{{- end }}

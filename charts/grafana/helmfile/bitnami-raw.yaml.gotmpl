@@ -1,0 +1,72 @@
+manifests:
+  - metadata:
+      name: grafana-dashboardproviders
+    apiVersion: v1
+    kind: ConfigMap
+    data:
+      dashboardproviders.yaml: |-
+        apiVersion: 1
+        providers:
+          - name: 'default'
+            orgId: 1
+            folder: 'dashboards'
+            type: file
+            disableDeletion: false
+            editable: true
+            updateIntervalSeconds: 10
+            options:
+              path: /opt/bitnami/grafana/dashboards
+
+  - metadata:
+      name: grafana-ini
+    apiVersion: v1
+    kind: Secret
+    type: Opaque
+    stringData:
+      grafana.ini: |-
+        [server]
+        root_url = {{ env "GRAFANA_URL" }}
+        {{- if eq (env "AUTH_TYPE") "oidc" }}
+        [auth.generic_oauth]
+        name = oidc
+        enabled = true
+        email_attribute_name = email:primary
+        scopes = openid profile email
+        client_id = {{ env "GRAFANA_OIDC_CLIENT_ID" }}
+        client_secret = {{ env "GRAFANA_OIDC_CLIENT_SECRET" }}
+        auth_url = {{ env "GRAFANA_OIDC_AUTH_URL" }}
+        token_url = {{ env "GRAFANA_OIDC_TOKEN_URL" }}
+        api_url = {{ env "GRAFANA_OIDC_USERINFO_URL" }}
+        allow_sign_up = true
+        tls_skip_verify_insecure = true
+        {{- end }}
+
+  - metadata:
+      name: grafana-datasources
+    apiVersion: v1
+    type: Opaque
+    kind: Secret
+    stringData:
+      datasources.yaml: |-
+        apiVersion: 1
+        datasources:
+          {{- if .Values.charts.prometheus.enabled }}
+          - name: {{ env "ENV_NAME" }}-prometheus
+            type: prometheus
+            url: http://prometheus-server.{{ .Values.charts.prometheus.namespace }}
+            access: proxy
+            isDefault: true
+          {{- end }}
+          {{- if .Values.charts.prometheusOperator.enabled }}
+          - name: {{ env "ENV_NAME" }}-prometheus-operator
+            type: prometheus
+            url: http://prometheus-operator-prometheus.{{ .Values.charts.prometheusOperator.namespace }}:9090
+            access: proxy
+            isDefault: {{ .Values.charts.prometheus.enabled | ternary false true }}
+          {{- end }}
+          {{- if .Values.charts.loki.enabled }}
+          - name: {{ env "ENV_NAME" }}-loki
+            type: loki
+            url: http://loki.{{ .Values.charts.loki.namespace }}:3100
+            access: proxy
+          {{- end }}

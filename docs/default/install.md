@@ -31,20 +31,6 @@ vm-b451253c-e485-4d99-7bb4-1cfe222bf4ac   Ready    <none>   39m   v1.13.5
 
 ## Prepare Helm
 
-### Helm 2
-
-Install the helm diff and tillerless plugins:
-
-```bash
-helm init --client-only
-
-helm plugin install https://github.com/databus23/helm-diff
-
-helm plugin install https://github.com/rimusz/helm-tiller
-
-helm tiller install
-```
-
 ### Helm 3
 
 ```bash

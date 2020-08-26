@@ -1,4 +1,6 @@
-controller:
-  kind: DaemonSet
-  publishService:
-    enabled: true
+kind: DaemonSet
+publishService:
+  enabled: true
+
+podSecurityPolicy:
+  enabled: {{ .Values._.psp.enabled }}

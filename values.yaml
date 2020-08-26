@@ -1,8 +1,0 @@
-## default values to be rendered into helmfile
-## templates go here. They are namespaced under
-## the `_` key to ensure they don't interfere
-## with the values for the actual helm charts.
-
-_:
-  ingress:
-    enabled: false
