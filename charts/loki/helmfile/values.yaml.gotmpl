@@ -1,21 +1,37 @@
 persistence:
   enabled: true
 
-{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
 config:
   schema_config:
     configs:
     - from: 2018-04-15
       store: boltdb
+      {{- if eq .Values._.cloudProvider "gcp" }}
       object_store: gcs
+      {{- else if or (eq .Values._.cloudProvider "aws") ( .Values.charts.minio.enabled ) }}
+      object_store: aws
+      {{- else }}
+      object_store: filesystem
+      {{- end }}
       schema: v9
       index:
         prefix: index_
         period: 168h
 
+{{- if eq .Values._.cloudProvider "gcp" }}
   storage_config:
     gcs:
-      bucket_name: {{ requiredEnv "LOKI_GCS_BUCKET" }}
+      bucket_name: {{ env "LOKI_OBJECT_STORAGE_BUCKET" | default (env "LOKI_GCS_BUCKET") }}
+{{- else if and (env "LOKI_S3_ACCESS_KEY") (eq .Values._.cloudProvider "aws") }}
+  storage_config:
+    aws:
+      s3: "s3://{{ requiredEnv "LOKI_S3_ACCESS_KEY" }}:{{ requiredEnv "LOKI_S3_SECRET_KEY" | urlquery }}@{{ requiredEnv "LOKI_S3_REGION" }}/{{ env "LOKI_OBJECT_STORAGE_BUCKET" }}"
+{{- else if .Values.charts.minio.enabled }}
+  storage_config:
+    aws:
+      s3: http://{{ requiredEnv "MINIO_ACCESS_KEY" }}:{{ requiredEnv "MINIO_SECRET_KEY" | urlquery }}@{{ .Values.chart.minio.name }}.{{ .Values.chart.minio.namespace }}:9000
+      s3forcepathstyle: true
+      bucketnames: {{ env "LOKI_OBJECT_STORAGE_BUCKET" | default "loki" }}
 {{- end }}
 
 {{- if eq (env "CLOUD_PROVIDER") "gcp" }}
@@ -32,6 +48,14 @@ extraVolumeMounts:
 env:
   - name: GOOGLE_APPLICATION_CREDENTIALS
     value: "/secrets/gcs-key.json"
+{{- end }}
+
+{{- if eq (env "CLOUD_PROVIDER") "aws" }}
+env:
+  - name: AWS_REGION
+    value: "{{ requiredEnv "LOKI_S3_REGION" }}"
+  - name: AWS_SDK_LOAD_CONFIG
+    value: "1"
 {{- end }}
 
 {{- if .Values.charts.prometheusOperator.enabled }}

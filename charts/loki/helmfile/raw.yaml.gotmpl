@@ -1,13 +1,9 @@
 manifests:
   - metadata:
-      name: loki-extra-config
-    apiVersion: v1
-    kind: ConfigMap
-{{- if eq (env "CLOUD_PROVIDER") "gcp" }}
-  - metadata:
       name: loki-secrets
     apiVersion: v1
     kind: Secret
     data:
+{{- if eq .Values._.cloudProvider "gcp" }}
       gcs-key.json: {{ env "LOKI_GCS_CREDENTIALS" }}
 {{- end }}

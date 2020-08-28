@@ -30,7 +30,9 @@
 
 ## Set up S3 credentials
 
-> Note: You can skip this and instead set `charts.minio.enabled=true` in `../cluster-envs/aws/charts.yaml.gotmpl`
+> Note: You can skip these steps and ensure `charts.minio.enabled=true` in `../cluster-envs/aws/charts.yaml.gotmpl` to just use the embedded minio.
+
+### Harbor
 
 1. Create user for Harbor
 
@@ -52,6 +54,28 @@
 
 aws iam put-user-policy --user-name ${ENV_NAME}-harbor --policy-name ${ENV_NAME}-harbor-bucket-access --policy-document "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::${HARBOR_IMAGE_STORAGE_BUCKET}\"]},{\"Effect\":\"Allow\",\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::${HARBOR_IMAGE_STORAGE_BUCKET}/*\"]}]}"
 
+### Loki
+
+1. Create user for Loki
+
+  ```bash
+  aws iam create-user --user-name ${ENV_NAME}-loki | jq .
+  ```
+
+2. Create access keys for Loki and save them as `LOKI_S3_ACCESS_KEY` and `LOKI_S3_SECRET_KEY` in `../cluster-envs/aws/envs.sh`
+
+  ```bash
+  aws iam create-access-key --user-name $ENV_NAME-loki | jq .
+  ```
+
+3. Create an s3 bucket for Loki
+  ```bash
+  aws s3 mb s3://${LOKI_OBJECT_STORAGE_BUCKET} --region ${AWS_REGION}
+  ```
+
+4. Set user policy to give loki access to the s3 bucket
+
+aws iam put-user-policy --user-name ${ENV_NAME}-loki --policy-name ${ENV_NAME}-loki-bucket-access --policy-document "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::${LOKI_OBJECT_STORAGE_BUCKET}\"]},{\"Effect\":\"Allow\",\"Action\":[\"s3:*\"],\"Resource\":[\"arn:aws:s3:::${LOKI_OBJECT_STORAGE_BUCKET}/*\"]}]}" | jq .
 
 ## DNS / INGRESS
 

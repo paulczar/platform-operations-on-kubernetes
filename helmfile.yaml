@@ -11,7 +11,7 @@ environments:
     values:
       - ./charts.yaml
       - ./values.yaml.gotmpl
-      {{- if env "ENV_DIR" }}
+      {{- if requiredEnv "ENV_DIR" }}
       - {{ requiredEnv "ENV_DIR" }}/charts.yaml.gotmpl
       - {{ requiredEnv "ENV_DIR" }}/values.yaml.gotmpl
       {{- end }}
@@ -39,7 +39,6 @@ environments:
 repositories:
 {{ $repositoryList | uniq | toYaml | indent 2 }}
 
-
 releases:
 
 #### CRDs
@@ -48,6 +47,8 @@ releases:
 {{- if hasKey . "crds" }}
   - name: {{ .name }}-crds
     chart: {{ .crds }}
+    labels:
+      {{ .labels | toYaml | nindent 6 }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -64,6 +65,8 @@ releases:
     chart: paulczar/raw
     version: 1.0.1
     values: [{{ . }}]
+    labels:
+      {{ $chart.labels | toYaml | nindent 6 }}
 {{- $index = add $index 1 }}
 {{- end }}
 {{- end }}

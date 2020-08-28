@@ -14,7 +14,7 @@ disableWebUI: false
 
 mode: standalone
 
-defaultBuckets: harbor,spinnaker,loki
+defaultBuckets: harbor,spinnaker,{{ env "LOKI_OBJECT_STORAGE_BUCKET" | default "loki" }}
 
 podAnnotations:
   prometheus.io/scrape: "true"
